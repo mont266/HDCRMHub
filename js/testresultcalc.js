@@ -24,11 +24,11 @@ function showInputs() {
     const commercialRadio = document.getElementById('commercial');
 
     if (commercialRadio.checked) {
-        commercialInputs.style.display = 'grid';
+        commercialInputs.style.display = 'grid'; // Changed to grid for new layout
         engagementInputs.style.display = 'none';
     } else {
         commercialInputs.style.display = 'none';
-        engagementInputs.style.display = 'grid';
+        engagementInputs.style.display = 'grid'; // Changed to grid for new layout
     }
     // Hide results section when switching test types
     document.getElementById('resultsSection').classList.add('hidden');
@@ -55,15 +55,34 @@ function calculate() {
         const diffClass = diff > 0 ? 'positive' : (diff < 0 ? 'negative' : '');
         const upliftClass = uplift > 0 ? 'positive' : (uplift < 0 ? 'negative' : '');
 
+        // Set flags for overall winner determination based on *this* row's uplift
+        // These flags will be used later to determine the overall winner,
+        // with specific weighting for engagement tests.
         if (uplift > 0) {
             hasPositiveUplift = true;
         } else if (uplift < 0) {
             hasNegativeUplift = true;
         }
 
-        let controlDisplay = isCurrency ? formatCurrency(controlVal) : `${controlVal.toFixed(2)}${metric.includes('(') ? '' : '%'}`;
-        let testDisplay = isCurrency ? formatCurrency(testVal) : `${testVal.toFixed(2)}${metric.includes('(') ? '' : '%'}`;
-        let diffDisplay = isCurrency ? formatCurrency(diff) : `${diff.toFixed(2)}%`;
+        let controlDisplay;
+        let testDisplay;
+
+        // Determine if the metric itself is a percentage rate (e.g., "Open Rate (%)")
+        const isRatePercentage = metric.includes('(%)');
+
+        if (isCurrency) {
+            controlDisplay = formatCurrency(controlVal);
+            testDisplay = formatCurrency(testVal);
+        } else if (isRatePercentage) {
+            controlDisplay = `${controlVal.toFixed(2)}%`;
+            testDisplay = `${testVal.toFixed(2)}%`;
+        } else {
+            // For metrics like Unique Opens/Clicks, display as raw numbers
+            controlDisplay = controlVal.toLocaleString(); // Format as number with commas
+            testDisplay = testVal.toLocaleString();      // Format as number with commas
+        }
+
+        let diffDisplay = isCurrency ? formatCurrency(diff) : `${uplift.toFixed(2)}%`; // Difference column now always shows uplift percentage
         let upliftDisplay = uplift === Infinity ? 'N/A' : `${uplift.toFixed(2)}%`;
 
         // Special handling for IPP percentage difference in brackets
@@ -150,6 +169,30 @@ function calculate() {
         addRow('Open Rate (%)', controlOpenRate, testOpenRate, openRateDiff, openRateUplift);
         addRow('Unique Clicks', controlUniqueClicks, testUniqueClicks, uniqueClicksDiff, uniqueClicksUplift);
         addRow('Click Through Rate (%)', controlCTR, testCTR, ctrDiff, ctrUplift);
+
+        // --- Modified Winner Determination Logic for Engagement Tests ---
+        // Reset flags for engagement test specific weighting
+        hasPositiveUplift = false;
+        hasNegativeUplift = false;
+
+        // Prioritize Open Rate and Click Through Rate for winner determination
+        if (openRateUplift > 0 || ctrUplift > 0) {
+            hasPositiveUplift = true;
+        }
+        if (openRateUplift < 0 || ctrUplift < 0) {
+            hasNegativeUplift = true;
+        }
+
+        // If Open Rate and CTR don't show a clear win/loss, then consider unique counts
+        if (!hasPositiveUplift && !hasNegativeUplift) {
+            if (uniqueOpensUplift > 0 || uniqueClicksUplift > 0) {
+                hasPositiveUplift = true;
+            }
+            if (uniqueOpensUplift < 0 || uniqueClicksUplift < 0) {
+                hasNegativeUplift = true;
+            }
+        }
+        // --- End Modified Winner Determination Logic ---
     }
 
     resultsTable.innerHTML = tableContent;
