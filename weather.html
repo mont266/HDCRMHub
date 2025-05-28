@@ -18,7 +18,7 @@
   <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
   <!-- CSS Files -->
   <link id="pagestyle" href="assets/css/soft-ui-dashboard.css?v=1.1.0" rel="stylesheet" />
-  <style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -28,11 +28,12 @@
             justify-content: center; /* Center content horizontally */
             align-items: flex-start; /* Align content to the top */
             min-height: 100vh; /* Ensure body takes full viewport height */
+            box-sizing: border-box; /* Include padding in overall dimensions */
         }
 
         .container {
             background-color: #ffffff;
-            padding: 30px 40px;
+            padding: 30px 40px; /* Default padding for larger screens */
             border-radius: 12px;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
             max-width: 800px; /* Limit container width */
@@ -44,12 +45,12 @@
         h1 {
             color: #2c3e50; /* Darker blue-gray for heading */
             margin-bottom: 10px;
-            font-size: 2.2em;
+            font-size: 2.2em; /* Default font size */
         }
 
         p {
             color: #7f8c8d; /* Gray for descriptive text */
-            font-size: 0.95em;
+            font-size: 0.95em; /* Default font size */
             margin-top: 0;
             margin-bottom: 25px;
         }
@@ -57,10 +58,10 @@
         #fetchWeatherBtn {
             background-color: #3498db; /* Blue button */
             color: white;
-            padding: 12px 25px;
+            padding: 12px 25px; /* Default padding for button */
             border: none;
             border-radius: 8px;
-            font-size: 1.1em;
+            font-size: 1.1em; /* Default font size for button */
             cursor: pointer;
             transition: background-color 0.3s ease, transform 0.2s ease;
             margin-bottom: 30px; /* Space below the button */
@@ -86,7 +87,7 @@
             border-bottom: 2px solid #ecf0f1; /* Light border under country name */
             padding-bottom: 8px;
             margin-bottom: 15px;
-            font-size: 1.6em;
+            font-size: 1.6em; /* Default font size */
             text-align: center; /* Center country names */
         }
 
@@ -98,12 +99,12 @@
         }
 
         #countyList li {
-            padding: 10px 0;
+            padding: 10px 0; /* Default padding */
             border-bottom: 1px dashed #e0e0e0; /* Lighter, dashed border */
             display: flex;
             justify-content: space-between; /* Pushes status to the right */
             align-items: center; /* Vertically align items */
-            font-size: 1.1em;
+            font-size: 1.1em; /* Default font size */
             color: #333;
         }
 
@@ -135,6 +136,78 @@
             color: #95a5a6;
             text-align: center;
             padding: 20px;
+        }
+
+        /* --- Media Queries for Mobile Responsiveness --- */
+
+        /* Styles for screens smaller than 600px (e.g., most phones in portrait) */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px; /* Reduce overall body padding */
+            }
+
+            .container {
+                padding: 20px; /* Reduce container padding */
+                border-radius: 8px; /* Slightly smaller border-radius */
+            }
+
+            h1 {
+                font-size: 1.8em; /* Smaller main heading */
+            }
+
+            p {
+                font-size: 0.9em; /* Smaller paragraph text */
+                margin-bottom: 20px;
+            }
+
+            #fetchWeatherBtn {
+                padding: 10px 20px; /* Smaller button padding */
+                font-size: 1em; /* Smaller button text */
+                margin-bottom: 20px;
+            }
+
+            .country-section h2 {
+                font-size: 1.4em; /* Smaller country heading */
+                margin-bottom: 10px;
+                padding-bottom: 5px;
+            }
+
+            #countyList li {
+                padding: 8px 0; /* Smaller list item padding */
+                font-size: 1em; /* Smaller list item text */
+            }
+
+            .status-no,
+            .status-yes,
+            .status-error {
+                /* Ensure status text doesn't wrap too aggressively if county name is long */
+                min-width: 45px; /* Give it a minimum width */
+                text-align: right; /* Align status to the right within its min-width */
+                margin-left: 10px; /* Reduce margin */
+            }
+        }
+
+        /* Styles for screens smaller than 400px (e.g., very small phones) */
+        @media (max-width: 400px) {
+            .container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 1.6em;
+            }
+
+            #fetchWeatherBtn {
+                font-size: 0.95em;
+            }
+
+            .country-section h2 {
+                font-size: 1.2em;
+            }
+
+            #countyList li {
+                font-size: 0.95em;
+            }
         }
     </style>
 </head>
