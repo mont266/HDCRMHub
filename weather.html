@@ -18,6 +18,125 @@
   <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
   <!-- CSS Files -->
   <link id="pagestyle" href="assets/css/soft-ui-dashboard.css?v=1.1.0" rel="stylesheet" />
+  <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5; /* Light gray background */
+            display: flex;
+            justify-content: center; /* Center content horizontally */
+            align-items: flex-start; /* Align content to the top */
+            min-height: 100vh; /* Ensure body takes full viewport height */
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+            max-width: 800px; /* Limit container width */
+            width: 100%; /* Make it responsive */
+            box-sizing: border-box; /* Include padding in width */
+            text-align: center; /* Center button and initial text */
+        }
+
+        h1 {
+            color: #2c3e50; /* Darker blue-gray for heading */
+            margin-bottom: 10px;
+            font-size: 2.2em;
+        }
+
+        p {
+            color: #7f8c8d; /* Gray for descriptive text */
+            font-size: 0.95em;
+            margin-top: 0;
+            margin-bottom: 25px;
+        }
+
+        #fetchWeatherBtn {
+            background-color: #3498db; /* Blue button */
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            margin-bottom: 30px; /* Space below the button */
+        }
+
+        #fetchWeatherBtn:hover {
+            background-color: #2980b9; /* Darker blue on hover */
+            transform: translateY(-2px); /* Slight lift effect */
+        }
+
+        #fetchWeatherBtn:active {
+            transform: translateY(0); /* Press effect */
+        }
+
+        .country-section {
+            margin-top: 30px; /* Space above country sections once loaded */
+            border-top: 1px solid #ecf0f1; /* Separator line after button/initial text */
+            padding-top: 20px;
+        }
+
+        .country-section h2 {
+            color: #34495e; /* Slightly lighter dark blue-gray */
+            border-bottom: 2px solid #ecf0f1; /* Light border under country name */
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+            font-size: 1.6em;
+            text-align: center; /* Center country names */
+        }
+
+        #countyList {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            text-align: left; /* Align list items to the left within their container */
+        }
+
+        #countyList li {
+            padding: 10px 0;
+            border-bottom: 1px dashed #e0e0e0; /* Lighter, dashed border */
+            display: flex;
+            justify-content: space-between; /* Pushes status to the right */
+            align-items: center; /* Vertically align items */
+            font-size: 1.1em;
+            color: #333;
+        }
+
+        #countyList li:last-child {
+            border-bottom: none; /* No border for the last item */
+        }
+
+        .status-no {
+            color: #27ae60; /* Vibrant green */
+            font-weight: bold;
+            flex-shrink: 0; /* Prevent status from shrinking */
+            margin-left: 15px; /* Space between county and status */
+        }
+
+        .status-yes {
+            color: #e74c3c; /* Strong red */
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-left: 15px;
+        }
+
+        .status-error { /* New style for error state */
+            color: #f39c12; /* Orange for error */
+            font-weight: normal;
+        }
+
+        .loading-message { /* Renamed for clarity */
+            font-style: italic;
+            color: #95a5a6;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
 </head>
 
 <!-- Start Navbar -->
@@ -84,6 +203,12 @@
                                 <a class="nav-link" href="testcalc.html">
                                     <span class="sidenav-mini-icon"> TA </span>
                                     <span class="sidenav-normal"> A/B Test Significance Calc </span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="weather.html">
+                                    <span class="sidenav-mini-icon"> TA </span>
+                                    <span class="sidenav-normal"> UK Weather Warnings </span>
                                 </a>
                             </li>
 
@@ -209,6 +334,7 @@
             <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="javascript:;">Pages</a></li>
             <li class="breadcrumb-item text-sm text-dark active" aria-current="page">Tools</li>
           </ol>
+          <h6 class="font-weight-bolder mb-0">UK Weather Warnings</h6>
         </nav>
         <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
           <div class="ms-md-auto pe-md-3 d-flex align-items-center">
@@ -229,11 +355,22 @@
     </nav>
     <!-- End Navbar -->
     <div class="container-fluid py-4">
+      <!--WEATHER CODE HERE-->
+      <div class="container">
+        <h1>UK Weather Warning Status</h1>
+        <p><em>This displays a "Possible Red Warning" based on high wind or heavy rain forecasts, not official Met Office warnings.</em></p>
+
+        <button id="fetchWeatherBtn">Get Latest Weather Warnings</button>
+
+        <div id="countyList">
+            <p class="loading-message">Click the button above to load weather warnings.</p>
+        </div>
+    </div>
       <div class="row">
         <div class="col-12">
           <div class="card mb-4">
             <div class="card-header pb-0">
-              <h6>Tools List</h6>
+              <h6>Other Tools</h6>
             </div>
             <div class="card-body px-0 pt-0 pb-2">
               <div class="table-responsive p-0">
@@ -251,87 +388,34 @@
                       <td>
                         <div class="d-flex px-2">
                           <div>
-                            <img src="assets/img/small-logos/calendar.png" class="avatar avatar-sm rounded-circle me-2" alt="spotify">
+                            <img src="assets/img/small-logos/logo-webdev.svg" class="avatar avatar-sm rounded-circle me-2" alt="web-dev">
                           </div>
                           <div class="my-auto">
-                            <a href="AlertThresholdCalc.html"><h6 class="mb-0 text-sm">Braze Alerts Threshold Calc</h6></a>
+                            <a href="testcalc.html">A/B Test Significance Calculator</h6></a>
                           </div>
                         </div>
                       </td>
-                      <td>
-                        <div class="d-flex align-items-center justify-content-center">
-                          <span class="me-2 text-xs font-weight-bold"><a href="alertthresholdcalc.html" class="btn btn-primary" type="button" role="button">Go to</a></span>
-                        </div>
-                        
-                      </td>
-                      <td>
-                        <span class="text-xs font-weight-bold"></span>
-                      </td>
-                      <td class="align-middle text-left">
-                        <div class="d-flex align-items-center justify-content-center">
-                         <p class="text-sm font-weight-bold mb-0"></p>
-                        </div>
-                      </td>
-                      <td class="align-middle">
-                        <button class="btn btn-link text-secondary mb-0">
-                          <i class="fa fa-ellipsis-v text-xs"></i>
-                        </button>
-                      </td>
-                    </tr>
-                    <tr>
                       <td>
                         <div class="d-flex px-2">
                           <div>
-                            <img src="assets/img/small-logos/logo-webdev.svg" class="avatar avatar-sm rounded-circle me-2" alt="spotify">
+                            <img src="assets/img/small-logos/calendar.png" class="avatar avatar-sm rounded-circle me-2" alt="calendar">
                           </div>
                           <div class="my-auto">
-                            <a href="testcalc.html"><h6 class="mb-0 text-sm">A/B Test Significance Calculator</h6></a>
+                            <a href="AlertThresholdCalc.html">Braze Alerts Threshold Calc</h6></a>
                           </div>
                         </div>
                       </td>
                       <td>
-                        <div class="d-flex align-items-center justify-content-center">
-                          <span class="me-2 text-xs font-weight-bold"><a href="testcalc.html" class="btn btn-primary" type="button" role="button">Go to</a></span>
-                        </div>
-                        
+                        <p class="text-sm font-weight-bold mb-0"></p>
                       </td>
                       <td>
                         <span class="text-xs font-weight-bold"></span>
                       </td>
-                      <td class="align-middle text-left">
+                      <td class="align-middle text-center">
                         <div class="d-flex align-items-center justify-content-center">
-                         <p class="text-sm font-weight-bold mb-0"></p>
-                        </div>
-                      </td>
-                      <td class="align-middle">
-                        <button class="btn btn-link text-secondary mb-0">
-                          <i class="fa fa-ellipsis-v text-xs"></i>
-                        </button>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div class="d-flex px-2">
+                          <span class="me-2 text-xs font-weight-bold"></span>
                           <div>
-                            <img src="assets/img/small-logos/icon-sun-cloud.png" class="avatar avatar-sm rounded-circle me-2" alt="weather">
                           </div>
-                          <div class="my-auto">
-                            <a href="weather.html"><h6 class="mb-0 text-sm">UK Weather Warnings</h6></a>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="d-flex align-items-center justify-content-center">
-                          <span class="me-2 text-xs font-weight-bold"><a href="weather.html" class="btn btn-primary" type="button" role="button">Go to</a></span>
-                        </div>
-                        
-                      </td>
-                      <td>
-                        <span class="text-xs font-weight-bold"></span>
-                      </td>
-                      <td class="align-middle text-left">
-                        <div class="d-flex align-items-center justify-content-center">
-                         <p class="text-sm font-weight-bold mb-0"></p>
                         </div>
                       </td>
                       <td class="align-middle">
@@ -360,6 +444,7 @@
     </div>
   </main>
   <!--   Core JS Files   -->
+  <script src="js/weatherwarnings.js"></script>
   <script src="assets/js/core/popper.min.js"></script>
   <script src="assets/js/core/bootstrap.min.js"></script>
   <script src="assets/js/plugins/perfect-scrollbar.min.js"></script>
