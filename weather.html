@@ -18,120 +18,183 @@
   <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
   <!-- CSS Files -->
   <link id="pagestyle" href="assets/css/soft-ui-dashboard.css?v=1.1.0" rel="stylesheet" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+  <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #f0f2f5; /* Light gray background */
+            background-color: #f0f2f5;
             display: flex;
-            justify-content: center; /* Center content horizontally */
-            align-items: flex-start; /* Align content to the top */
-            min-height: 100vh; /* Ensure body takes full viewport height */
-            box-sizing: border-box; /* Include padding in overall dimensions */
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            box-sizing: border-box;
         }
 
         .container {
             background-color: #ffffff;
-            padding: 30px 40px; /* Default padding for larger screens */
+            padding: 30px 40px;
             border-radius: 12px;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-            max-width: 800px; /* Limit container width */
-            width: 100%; /* Make it responsive */
-            box-sizing: border-box; /* Include padding in width */
-            text-align: center; /* Center button and initial text */
+            max-width: 800px;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: center;
         }
 
         h1 {
-            color: #2c3e50; /* Darker blue-gray for heading */
+            color: #2c3e50;
             margin-bottom: 10px;
-            font-size: 2.2em; /* Default font size */
+            font-size: 2.2em;
         }
 
         p {
-            color: #7f8c8d; /* Gray for descriptive text */
-            font-size: 0.95em; /* Default font size */
+            color: #7f8c8d;
+            font-size: 0.95em;
             margin-top: 0;
             margin-bottom: 25px;
         }
 
         #fetchWeatherBtn {
-            background-color: #3498db; /* Blue button */
+            background-color: #3498db;
             color: white;
-            padding: 12px 25px; /* Default padding for button */
+            padding: 12px 25px;
             border: none;
             border-radius: 8px;
-            font-size: 1.1em; /* Default font size for button */
+            font-size: 1.1em;
             cursor: pointer;
             transition: background-color 0.3s ease, transform 0.2s ease;
-            margin-bottom: 30px; /* Space below the button */
+            margin-bottom: 30px;
         }
 
         #fetchWeatherBtn:hover {
-            background-color: #2980b9; /* Darker blue on hover */
-            transform: translateY(-2px); /* Slight lift effect */
+            background-color: #2980b9;
+            transform: translateY(-2px);
         }
 
         #fetchWeatherBtn:active {
-            transform: translateY(0); /* Press effect */
+            transform: translateY(0);
         }
 
         .country-section {
-            margin-top: 30px; /* Space above country sections once loaded */
-            border-top: 1px solid #ecf0f1; /* Separator line after button/initial text */
+            margin-top: 30px;
+            border-top: 1px solid #ecf0f1;
             padding-top: 20px;
         }
 
         .country-section h2 {
-            color: #34495e; /* Slightly lighter dark blue-gray */
-            border-bottom: 2px solid #ecf0f1; /* Light border under country name */
+            color: #34495e;
+            border-bottom: 2px solid #ecf0f1;
             padding-bottom: 8px;
             margin-bottom: 15px;
-            font-size: 1.6em; /* Default font size */
-            text-align: center; /* Center country names */
+            font-size: 1.6em;
+            text-align: center;
         }
 
         #countyList {
             list-style: none;
             padding: 0;
             margin: 0;
-            text-align: left; /* Align list items to the left within their container */
+            text-align: left;
         }
 
         #countyList li {
-            padding: 10px 0; /* Default padding */
-            border-bottom: 1px dashed #e0e0e0; /* Lighter, dashed border */
+            padding: 10px 0;
+            border-bottom: 1px dashed #e0e0e0;
             display: flex;
-            justify-content: space-between; /* Pushes status to the right */
-            align-items: center; /* Vertically align items */
-            font-size: 1.1em; /* Default font size */
+            flex-direction: column;
+            align-items: flex-start;
+            font-size: 1.1em;
             color: #333;
         }
 
         #countyList li:last-child {
-            border-bottom: none; /* No border for the last item */
+            border-bottom: none;
         }
 
-        .status-no {
-            color: #27ae60; /* Vibrant green */
-            font-weight: bold;
-            flex-shrink: 0; /* Prevent status from shrinking */
-            margin-left: 15px; /* Space between county and status */
+        .county-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            cursor: default;
+            padding-bottom: 5px;
         }
 
-        .status-yes {
-            color: #e74c3c; /* Strong red */
+        .county-summary.clickable {
+            cursor: pointer;
+        }
+
+        .county-name-text {
+            /* No specific styles needed here */
+        }
+
+        .status-and-arrow {
+            display: flex;
+            align-items: center;
+        }
+
+        .status-text {
             font-weight: bold;
             flex-shrink: 0;
             margin-left: 15px;
+            text-align: right;
         }
 
-        .status-error { /* New style for error state */
-            color: #f39c12; /* Orange for error */
+        .status-no {
+            color: #27ae60;
+        }
+
+        .status-yes {
+            color: #e74c3c;
+        }
+
+        .status-error {
+            color: #f39c12;
             font-weight: normal;
         }
 
-        .loading-message { /* Renamed for clarity */
+        .dropdown-arrow {
+            margin-left: 8px;
+            transition: transform 0.2s ease-out;
+            font-size: 0.8em;
+            color: #7f8c8d;
+        }
+
+        .county-summary.expanded .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .warning-reason-container {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            width: 100%;
+        }
+
+        .warning-reason-container.expanded {
+            max-height: 200px;
+        }
+
+        /* New styling for individual reason details */
+        .warning-reason-detail { /* Use this class for each <p> inside the container */
+            font-size: 0.9em;
+            color: #555;
+            margin: 0; /* Remove default paragraph margins */
+            padding-left: 20px; /* Indent */
+            line-height: 1.4;
+            padding-bottom: 2px; /* Small space between lines */
+        }
+        .warning-reason-detail:first-of-type {
+            padding-top: 5px; /* Small padding at the top of the details */
+        }
+        .warning-reason-detail:last-of-type {
+            padding-bottom: 5px; /* Small padding at the bottom of the details */
+        }
+
+
+        .loading-message {
             font-style: italic;
             color: #95a5a6;
             text-align: center;
@@ -139,55 +202,69 @@
         }
 
         /* --- Media Queries for Mobile Responsiveness --- */
-
-        /* Styles for screens smaller than 600px (e.g., most phones in portrait) */
         @media (max-width: 600px) {
             body {
-                padding: 10px; /* Reduce overall body padding */
+                padding: 10px;
             }
 
             .container {
-                padding: 20px; /* Reduce container padding */
-                border-radius: 8px; /* Slightly smaller border-radius */
+                padding: 20px;
+                border-radius: 8px;
             }
 
             h1 {
-                font-size: 1.8em; /* Smaller main heading */
+                font-size: 1.8em;
             }
 
             p {
-                font-size: 0.9em; /* Smaller paragraph text */
+                font-size: 0.9em;
                 margin-bottom: 20px;
             }
 
             #fetchWeatherBtn {
-                padding: 10px 20px; /* Smaller button padding */
-                font-size: 1em; /* Smaller button text */
+                padding: 10px 20px;
+                font-size: 1em;
                 margin-bottom: 20px;
             }
 
             .country-section h2 {
-                font-size: 1.4em; /* Smaller country heading */
+                font-size: 1.4em;
                 margin-bottom: 10px;
                 padding-bottom: 5px;
             }
 
             #countyList li {
-                padding: 8px 0; /* Smaller list item padding */
-                font-size: 1em; /* Smaller list item text */
+                padding: 8px 0;
+                font-size: 1em;
             }
 
-            .status-no,
-            .status-yes,
-            .status-error {
-                /* Ensure status text doesn't wrap too aggressively if county name is long */
-                min-width: 45px; /* Give it a minimum width */
-                text-align: right; /* Align status to the right within its min-width */
-                margin-left: 10px; /* Reduce margin */
+            .county-summary {
+                 flex-direction: column;
+                 align-items: flex-start;
+                 padding-bottom: 0px;
+            }
+
+            .status-text {
+                margin-left: 0;
+                text-align: left;
+                margin-top: 5px;
+            }
+
+            .dropdown-arrow {
+                margin-left: 0;
+                margin-top: 5px;
+            }
+
+            .warning-reason-container {
+                margin-top: 5px;
+            }
+
+            .warning-reason-detail { /* Adjust for mobile */
+                padding-left: 10px;
+                font-size: 0.85em;
             }
         }
 
-        /* Styles for screens smaller than 400px (e.g., very small phones) */
         @media (max-width: 400px) {
             .container {
                 padding: 15px;
@@ -207,6 +284,9 @@
 
             #countyList li {
                 font-size: 0.95em;
+            }
+            .warning-reason-detail {
+                font-size: 0.8em;
             }
         }
     </style>
