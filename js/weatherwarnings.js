@@ -1,5 +1,22 @@
 const apiKey = '34285941a5314c92a81123428252805'; // Replace with your WeatherAPI.com API key
 
+// Removed KPH_TO_MPH constant as we'll fetch MPH directly
+
+// --- DEFAULT THRESHOLDS ---
+// These are the original "Amber/Yellow" level thresholds, now used as defaults.
+const DEFAULT_WIND_THRESHOLD_MPH = 37.28; // Approx 60 kph, now directly in MPH
+const DEFAULT_RAIN_THRESHOLD_MM_HR = 5; // 5 mm/hr
+const DEFAULT_HEATWAVE_THRESHOLD_C = 25; // 25°C
+const DEFAULT_CONSECUTIVE_DAYS = 3;
+// --- END DEFAULT THRESHOLDS ---
+
+// --- DYNAMIC THRESHOLDS (These will be updated by Dev Tools) ---
+let currentWindThresholdMph = DEFAULT_WIND_THRESHOLD_MPH;
+let currentRainThresholdMmHr = DEFAULT_RAIN_THRESHOLD_MM_HR;
+let currentHeatwaveThresholdC = DEFAULT_HEATWAVE_THRESHOLD_C;
+let currentConsecutiveDays = DEFAULT_CONSECUTIVE_DAYS;
+// --- END DYNAMIC THRESHOLDS ---
+
 // Categorized and pre-sorted list of major UK counties
 const ukCountiesByCategory = {
     "England": [
@@ -43,56 +60,86 @@ const ukCountiesByCategory = {
 
 
 async function fetchWeatherForCounty(county) {
-    const url = `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${county},UK&days=1&aqi=no&alerts=no`;
+    // We can specify units in the API request or extract directly from response objects
+    // WeatherAPI.com provides wind_mph directly
+    const url = `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${county},UK&days=4&aqi=no&alerts=no`;
 
     try {
         const response = await fetch(url);
         if (!response.ok) {
             console.error(`Error fetching data for ${county}: Status ${response.status} - ${response.statusText}`);
-            return { county: county, hasWarning: false, reason: ['Error fetching data'], error: true }; // Reason as array
+            return { county: county, hasWarning: false, reason: ['Error fetching data'], hasHeatwave: false, heatwaveMessage: '', hasStormWarning: false, stormMessage: '', error: true };
         }
         const data = await response.json();
 
-        const currentWindKph = data.current?.wind_kph || 0;
+        // --- Wind/Rain Warning Logic (extended to 4 days) ---
+        // Directly use wind_mph from the API response
+        const currentWindMph = data.current?.wind_mph || 0;
         const currentPrecipMm = data.current?.precip_mm || 0;
 
         let hasSevereForecast = false;
-        let forecastReasonDetails = []; // Will hold formatted forecast strings
+        let forecastReasonDetails = [];
+        
+        // --- Storm Warning Logic ---
+        let hasStormWarning = false;
+        let stormMessage = ''; // Will store details of the first triggered storm condition
 
-        // --- WEATHER WARNING THRESHOLDS (Original values) ---
-        const WIND_THRESHOLD_KPH = 5; // Wind over 60 kph (approx. 37 mph)
-        const RAIN_THRESHOLD_MM_HR = 0.1; // Precipitation over 5 mm/hour (heavy rain)
-        // --- END WEATHER WARNING THRESHOLDS ---
+        if (data.forecast?.forecastday) {
+            for (const dayForecast of data.forecast.forecastday) {
+                if (dayForecast.hour) {
+                    for (const hourData of dayForecast.hour) {
+                        // Directly use wind_mph from the API response for forecast
+                        const forecastWindMph = hourData.wind_mph || 0;
+                        const forecastPrecipMm = hourData.precip_mm || 0;
 
+                        let conditionsAtHour = [];
+                        if (forecastWindMph > currentWindThresholdMph) { // Use dynamic threshold
+                            conditionsAtHour.push(`Wind ${forecastWindMph.toFixed(1)}mph`);
+                        }
+                        if (forecastPrecipMm > currentRainThresholdMmHr) { // Use dynamic threshold
+                            conditionsAtHour.push(`Rain ${forecastPrecipMm.toFixed(1)}mm/hr`);
+                        }
+                        
+                        // Check for general severe warning (wind OR rain)
+                        if (conditionsAtHour.length > 0) {
+                            hasSevereForecast = true;
+                            const dateTime = new Date(hourData.time).toLocaleString('en-GB', {
+                                weekday: 'short',
+                                day: 'numeric',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+                            forecastReasonDetails.push(`${dateTime}: ${conditionsAtHour.join(', ')}`);
+                        }
 
-        if (data.forecast?.forecastday.length > 0) {
-            // Check the next 6 hours of the forecast for severe conditions
-            for (let i = 0; i < Math.min(data.forecast.forecastday[0].hour.length, 6); i++) {
-                const hourData = data.forecast.forecastday[0].hour[i];
-                if (hourData) {
-                    let conditionsAtHour = [];
-                    if (hourData.wind_kph > WIND_THRESHOLD_KPH) {
-                        conditionsAtHour.push(`Wind ${hourData.wind_kph.toFixed(1)}kph`);
-                    }
-                    if (hourData.precip_mm > RAIN_THRESHOLD_MM_HR) {
-                        conditionsAtHour.push(`Rain ${hourData.precip_mm.toFixed(1)}mm/hr`);
-                    }
-                    if (conditionsAtHour.length > 0) {
-                        hasSevereForecast = true;
-                        forecastReasonDetails.push(`At ${hourData.time.slice(11, 16)}: ${conditionsAtHour.join(', ')}`);
+                        // Check for "storm" condition (wind AND rain simultaneously)
+                        if (forecastWindMph > currentWindThresholdMph && forecastPrecipMm > currentRainThresholdMmHr) { // Use dynamic thresholds
+                            if (!hasStormWarning) { // Only capture details of the first instance
+                                hasStormWarning = true;
+                                const stormDateTime = new Date(hourData.time).toLocaleString('en-GB', {
+                                    weekday: 'short',
+                                    day: 'numeric',
+                                    month: 'short',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                });
+                                stormMessage = `Expected: ${stormDateTime} (Wind ${forecastWindMph.toFixed(1)}mph & Rain ${forecastPrecipMm.toFixed(1)}mm/hr)`;
+                            }
+                        }
                     }
                 }
             }
         }
 
-        let reasons = []; // This will be the array of user-friendly reason strings
 
-        if (currentWindKph > WIND_THRESHOLD_KPH || currentPrecipMm > RAIN_THRESHOLD_MM_HR) {
+        let reasons = []; // Reasons for the "YES" dropdown
+        if (currentWindMph > currentWindThresholdMph || currentPrecipMm > currentRainThresholdMmHr) { // Use dynamic thresholds
             let currentConditions = [];
-            if (currentWindKph > WIND_THRESHOLD_KPH) {
-                currentConditions.push(`Wind ${currentWindKph.toFixed(1)} kph`);
+            if (currentWindMph > currentWindThresholdMph) { // Use dynamic threshold
+                currentConditions.push(`Wind ${currentWindMph.toFixed(1)} mph`);
             }
-            if (currentPrecipMm > RAIN_THRESHOLD_MM_HR) {
+            if (currentPrecipMm > currentRainThresholdMmHr) { // Use dynamic threshold
                 currentConditions.push(`Rain ${currentPrecipMm.toFixed(1)} mm/hr`);
             }
             reasons.push(`Current conditions: ${currentConditions.join(' & ')}`);
@@ -100,22 +147,61 @@ async function fetchWeatherForCounty(county) {
         
         if (forecastReasonDetails.length > 0) {
             reasons.push('Forecasted severe conditions:');
-            reasons = reasons.concat(forecastReasonDetails); // Add individual forecast details
+            reasons = reasons.concat(forecastReasonDetails);
         }
 
+        const isRedWarningCondition = (currentWindMph > currentWindThresholdMph || currentPrecipMm > currentRainThresholdMmHr || hasSevereForecast); // Use dynamic thresholds
 
-        const isRedWarningCondition = (currentWindKph > WIND_THRESHOLD_KPH || currentPrecipMm > RAIN_THRESHOLD_MM_HR || hasSevereForecast);
+
+        // --- Heatwave Logic ---
+        let hasHeatwave = false;
+        let heatwaveMessage = '';
+        
+        if (data.forecast?.forecastday && data.forecast.forecastday.length >= currentConsecutiveDays) { // Use dynamic consecutive days
+            let consecutiveHotDays = 0;
+            let heatwaveStartDayIndex = -1;
+
+            for (let i = 0; i < data.forecast.forecastday.length; i++) {
+                const day = data.forecast.forecastday[i].day;
+                if (day.maxtemp_c >= currentHeatwaveThresholdC) { // Use dynamic threshold
+                    if (consecutiveHotDays === 0) {
+                        heatwaveStartDayIndex = i;
+                    }
+                    consecutiveHotDays++;
+                } else {
+                    consecutiveHotDays = 0;
+                    heatwaveStartDayIndex = -1;
+                }
+
+                if (consecutiveHotDays >= currentConsecutiveDays) { // Use dynamic consecutive days
+                    hasHeatwave = true;
+                    let totalHeatwaveDays = 0;
+                    for (let j = heatwaveStartDayIndex; j < data.forecast.forecastday.length; j++) {
+                        if (data.forecast.forecastday[j].day.maxtemp_c >= currentHeatwaveThresholdC) { // Use dynamic threshold
+                            totalHeatwaveDays++;
+                        } else {
+                            break;
+                        }
+                    }
+                    heatwaveMessage = `Expected: ${totalHeatwaveDays} days > ${currentHeatwaveThresholdC}°C`;
+                    break;
+                }
+            }
+        }
 
         return { 
             county: county, 
             hasWarning: isRedWarningCondition, 
-            // Return the array of reasons
-            reason: reasons.length > 0 ? reasons : ['No specific severe conditions detected.']
+            reason: reasons.length > 0 ? reasons : ['No specific severe conditions detected.'],
+            hasHeatwave: hasHeatwave,
+            heatwaveMessage: heatwaveMessage,
+            hasStormWarning: hasStormWarning,
+            stormMessage: stormMessage       
         };
 
     } catch (error) {
         console.error(`Network or parsing error for ${county}:`, error);
-        return { county: county, hasWarning: false, reason: ['Network/Parsing Error'], error: true };
+        return { county: county, hasWarning: false, reason: ['Network/Parsing Error'], hasHeatwave: false, heatwaveMessage: '', hasStormWarning: false, stormMessage: '', error: true };
     }
 }
 
@@ -144,14 +230,55 @@ async function displayWeatherWarnings() {
             const weatherStatus = await fetchWeatherForCounty(county);
             const listItem = document.createElement('li');
 
-            // --- County Summary (Clickable Area) ---
             const countySummaryDiv = document.createElement('div');
             countySummaryDiv.classList.add('county-summary');
+
+            const countyNameGroup = document.createElement('div');
+            countyNameGroup.classList.add('county-name-group');
 
             const countyNameSpan = document.createElement('span');
             countyNameSpan.classList.add('county-name-text');
             countyNameSpan.textContent = county;
-            countySummaryDiv.appendChild(countyNameSpan);
+            countyNameGroup.appendChild(countyNameSpan);
+
+            // --- Heatwave Icon and Tooltip ---
+            if (weatherStatus.hasHeatwave) {
+                const heatwaveStatusSpan = document.createElement('span');
+                heatwaveStatusSpan.classList.add('tooltip-container');
+                
+                const heatwaveIconSpan = document.createElement('span');
+                heatwaveIconSpan.classList.add('heatwave-icon');
+                heatwaveIconSpan.textContent = '🔥';
+                heatwaveStatusSpan.appendChild(heatwaveIconSpan);
+
+                const heatwaveTooltipSpan = document.createElement('span');
+                heatwaveTooltipSpan.classList.add('tooltip-content');
+                heatwaveTooltipSpan.textContent = `Heatwave ${weatherStatus.heatwaveMessage}`;
+                heatwaveStatusSpan.appendChild(heatwaveTooltipSpan);
+
+                countyNameGroup.appendChild(heatwaveStatusSpan);
+            }
+
+            // --- Storm Icon and Tooltip ---
+            if (weatherStatus.hasStormWarning) {
+                const stormStatusSpan = document.createElement('span');
+                stormStatusSpan.classList.add('tooltip-container');
+                
+                const stormIconSpan = document.createElement('span');
+                stormIconSpan.classList.add('storm-icon');
+                stormIconSpan.textContent = '⛈️'; // Cloud with lightning and rain emoji
+                stormStatusSpan.appendChild(stormIconSpan);
+
+                const stormTooltipSpan = document.createElement('span');
+                stormTooltipSpan.classList.add('tooltip-content');
+                stormTooltipSpan.textContent = `Storm: ${weatherStatus.stormMessage}`;
+                stormStatusSpan.appendChild(stormTooltipSpan);
+
+                countyNameGroup.appendChild(stormStatusSpan);
+            }
+
+            countySummaryDiv.appendChild(countyNameGroup);
+
 
             const statusAndArrowDiv = document.createElement('div');
             statusAndArrowDiv.classList.add('status-and-arrow');
@@ -162,12 +289,20 @@ async function displayWeatherWarnings() {
             if (weatherStatus.error) {
                 statusSpan.textContent = 'Error fetching';
                 statusSpan.classList.add('status-error');
-                statusSpan.title = weatherStatus.reason.join(', '); // Join for tooltip
+                statusSpan.title = weatherStatus.reason.join(', ');
                 hasOverallError = true;
-            } else if (weatherStatus.hasWarning) {
+            } else if (weatherStatus.hasWarning) { // Main wind/rain warning
                 statusSpan.textContent = `YES`;
-                statusSpan.classList.add('status-yes');
                 countySummaryDiv.classList.add('clickable');
+                
+                // Determine if it's "Red-level YES" or "Amber-level YES"
+                if (weatherStatus.hasHeatwave || weatherStatus.hasStormWarning) {
+                    // If heatwave OR storm is present, it's a more severe condition
+                    statusSpan.classList.add('status-red');
+                } else {
+                    // Only wind OR rain, but no heatwave AND no storm - less severe
+                    statusSpan.classList.add('status-amber');
+                }
                 
                 const arrowSpan = document.createElement('span');
                 arrowSpan.classList.add('dropdown-arrow');
@@ -182,12 +317,10 @@ async function displayWeatherWarnings() {
             countySummaryDiv.appendChild(statusAndArrowDiv);
             listItem.appendChild(countySummaryDiv);
 
-            // --- Warning Reason (Collapsible Content) ---
             const reasonContainerDiv = document.createElement('div');
             reasonContainerDiv.classList.add('warning-reason-container');
 
             if (weatherStatus.hasWarning && !weatherStatus.error) {
-                // Now, iterate through the array of reasons and create a <p> for each
                 weatherStatus.reason.forEach(detail => {
                     const detailP = document.createElement('p');
                     detailP.classList.add('warning-reason-detail');
@@ -197,7 +330,6 @@ async function displayWeatherWarnings() {
             }
             listItem.appendChild(reasonContainerDiv);
 
-            // --- Event Listener for Click-to-Expand ---
             if (weatherStatus.hasWarning && !weatherStatus.error) {
                 countySummaryDiv.addEventListener('click', () => {
                     countySummaryDiv.classList.toggle('expanded');
@@ -228,4 +360,74 @@ async function displayWeatherWarnings() {
     countyListElement.prepend(completionMessage);
 }
 
+
+// --- Developer Tools Panel Logic ---
+
+const devToolsPanel = document.getElementById('developerTools');
+const windInput = document.getElementById('windThreshold');
+const rainInput = document.getElementById('rainThreshold');
+const heatwaveInput = document.getElementById('heatwaveThreshold');
+const consecutiveDaysInput = document.getElementById('consecutiveDays');
+const applyBtn = document.getElementById('applyThresholdsBtn');
+const resetBtn = document.getElementById('resetThresholdsBtn');
+
+// Function to load thresholds from localStorage or use defaults
+function loadThresholds() {
+    currentWindThresholdMph = parseFloat(localStorage.getItem('dev_windThreshold')) || DEFAULT_WIND_THRESHOLD_MPH;
+    currentRainThresholdMmHr = parseFloat(localStorage.getItem('dev_rainThreshold')) || DEFAULT_RAIN_THRESHOLD_MM_HR;
+    currentHeatwaveThresholdC = parseFloat(localStorage.getItem('dev_heatwaveThreshold')) || DEFAULT_HEATWAVE_THRESHOLD_C;
+    currentConsecutiveDays = parseInt(localStorage.getItem('dev_consecutiveDays')) || DEFAULT_CONSECUTIVE_DAYS;
+
+    // Populate input fields with current values
+    windInput.value = currentWindThresholdMph.toFixed(2);
+    rainInput.value = currentRainThresholdMmHr.toFixed(1);
+    heatwaveInput.value = currentHeatwaveThresholdC;
+    consecutiveDaysInput.value = currentConsecutiveDays;
+}
+
+// Function to save thresholds to localStorage and update active variables
+function saveThresholds() {
+    currentWindThresholdMph = parseFloat(windInput.value);
+    currentRainThresholdMmHr = parseFloat(rainInput.value);
+    currentHeatwaveThresholdC = parseFloat(heatwaveInput.value);
+    currentConsecutiveDays = parseInt(consecutiveDaysInput.value);
+
+    localStorage.setItem('dev_windThreshold', currentWindThresholdMph);
+    localStorage.setItem('dev_rainThreshold', currentRainThresholdMmHr);
+    localStorage.setItem('dev_heatwaveThreshold', currentHeatwaveThresholdC);
+    localStorage.setItem('dev_consecutiveDays', currentConsecutiveDays);
+}
+
+// Event listener for keyboard shortcut (Ctrl + Shift + T)
+document.addEventListener('keydown', (event) => {
+    if (event.ctrlKey && event.shiftKey && event.key === 'T') {
+        event.preventDefault(); // Prevent default browser action for this key combo
+        if (devToolsPanel.style.display === 'none' || devToolsPanel.style.display === '') {
+            devToolsPanel.style.display = 'flex';
+            loadThresholds(); // Load current values when panel is shown
+        } else {
+            devToolsPanel.style.display = 'none';
+        }
+    }
+});
+
+// Event listeners for developer panel buttons
+applyBtn.addEventListener('click', () => {
+    saveThresholds();
+    displayWeatherWarnings(); // Refresh weather data with new thresholds
+});
+
+resetBtn.addEventListener('click', () => {
+    windInput.value = DEFAULT_WIND_THRESHOLD_MPH.toFixed(2);
+    rainInput.value = DEFAULT_RAIN_THRESHOLD_MM_HR.toFixed(1);
+    heatwaveInput.value = DEFAULT_HEATWAVE_THRESHOLD_C;
+    consecutiveDaysInput.value = DEFAULT_CONSECUTIVE_DAYS;
+    saveThresholds(); // Save defaults
+    displayWeatherWarnings(); // Refresh weather data with default thresholds
+});
+
+// Initial load of thresholds when script runs (if dev panel is shown manually or later)
+loadThresholds();
+
+// Initial event listener for the main fetch button
 document.getElementById('fetchWeatherBtn').addEventListener('click', displayWeatherWarnings);

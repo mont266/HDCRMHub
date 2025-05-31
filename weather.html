@@ -126,8 +126,70 @@
             cursor: pointer;
         }
 
+        .county-name-group {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            max-width: 70%;
+        }
+
         .county-name-text {
-            /* No specific styles needed here */
+            margin-right: 8px;
+        }
+
+        /* Generic tooltip container styles */
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+            margin-left: 5px;
+            cursor: help;
+        }
+
+        /* Generic tooltip content styles */
+        .tooltip-content {
+            visibility: hidden;
+            opacity: 0;
+            width: 200px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            font-size: 0.85em;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            transition: opacity 0.3s;
+            white-space: normal;
+        }
+
+        .tooltip-content::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+
+        .tooltip-container:hover .tooltip-content {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .heatwave-icon {
+            font-size: 1.2em;
+            color: #e67e22;
+        }
+
+        .storm-icon {
+            font-size: 1.2em;
+            color: #3498db;
         }
 
         .status-and-arrow {
@@ -142,14 +204,17 @@
             text-align: right;
         }
 
+        /* Redefined 'status-yes' as 'status-red' */
+        .status-red {
+            color: #e74c3c; /* Strong red */
+        }
+        /* New Amber status */
+        .status-amber {
+            color: #f39c12; /* Orange/Amber color */
+        }
         .status-no {
             color: #27ae60;
         }
-
-        .status-yes {
-            color: #e74c3c;
-        }
-
         .status-error {
             color: #f39c12;
             font-weight: normal;
@@ -177,22 +242,20 @@
             max-height: 200px;
         }
 
-        /* New styling for individual reason details */
-        .warning-reason-detail { /* Use this class for each <p> inside the container */
+        .warning-reason-detail {
             font-size: 0.9em;
             color: #555;
-            margin: 0; /* Remove default paragraph margins */
-            padding-left: 20px; /* Indent */
+            margin: 0;
+            padding-left: 20px;
             line-height: 1.4;
-            padding-bottom: 2px; /* Small space between lines */
+            padding-bottom: 2px;
         }
         .warning-reason-detail:first-of-type {
-            padding-top: 5px; /* Small padding at the top of the details */
+            padding-top: 5px;
         }
         .warning-reason-detail:last-of-type {
-            padding-bottom: 5px; /* Small padding at the bottom of the details */
+            padding-bottom: 5px;
         }
-
 
         .loading-message {
             font-style: italic;
@@ -200,6 +263,73 @@
             text-align: center;
             padding: 20px;
         }
+
+        /* --- Developer Tools Panel --- */
+        #developerTools {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(255, 255, 255, 0.95);
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 300px;
+            font-family: Arial, sans-serif;
+            font-size: 0.9em;
+        }
+        #developerTools h2 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 1.2em;
+            text-align: center;
+        }
+        #developerTools div {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #developerTools label {
+            flex-basis: 60%;
+            text-align: left;
+            margin-right: 10px;
+            color: #555;
+        }
+        #developerTools input[type="number"] {
+            flex-basis: 40%;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: auto;
+        }
+        #developerTools button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 5px;
+            font-size: 0.9em;
+        }
+        #applyThresholdsBtn {
+            background-color: #28a745;
+            color: white;
+        }
+        #applyThresholdsBtn:hover {
+            background-color: #218838;
+        }
+        #resetThresholdsBtn {
+            background-color: #dc3545;
+            color: white;
+        }
+        #resetThresholdsBtn:hover {
+            background-color: #c82333;
+        }
+
 
         /* --- Media Queries for Mobile Responsiveness --- */
         @media (max-width: 600px) {
@@ -244,6 +374,34 @@
                  padding-bottom: 0px;
             }
 
+            .county-name-group {
+                flex-direction: column;
+                align-items: flex-start;
+                max-width: 100%;
+            }
+
+            .county-name-text {
+                margin-right: 0;
+                margin-bottom: 5px;
+            }
+
+            .tooltip-container {
+                margin-left: 0;
+                margin-top: 5px;
+                font-size: 0.9em;
+            }
+
+            .tooltip-content {
+                width: 150px;
+                left: 0;
+                margin-left: 0;
+                bottom: 100%;
+                text-align: left;
+            }
+            .tooltip-content::after {
+                left: 20px;
+            }
+
             .status-text {
                 margin-left: 0;
                 text-align: left;
@@ -259,9 +417,17 @@
                 margin-top: 5px;
             }
 
-            .warning-reason-detail { /* Adjust for mobile */
+            .warning-reason-detail {
                 padding-left: 10px;
                 font-size: 0.85em;
+            }
+
+            #developerTools {
+                width: calc(100% - 40px);
+                bottom: 10px;
+                right: 10px;
+                left: 10px;
+                max-width: none;
             }
         }
 
@@ -518,6 +684,27 @@
         <div id="countyList">
             <p class="loading-message">Click the button above to load weather warnings.</p>
         </div>
+    </div>
+    <div id="developerTools">
+        <h2>Developer Tools</h2>
+        <div>
+            <label for="windThreshold">Wind Threshold (mph):</label>
+            <input type="number" id="windThreshold" step="0.1">
+        </div>
+        <div>
+            <label for="rainThreshold">Rain Threshold (mm/hr):</label>
+            <input type="number" id="rainThreshold" step="0.1">
+        </div>
+        <div>
+            <label for="heatwaveThreshold">Heatwave Threshold (°C):</label>
+            <input type="number" id="heatwaveThreshold" step="1">
+        </div>
+        <div>
+            <label for="consecutiveDays">Consecutive Days (Heatwave):</label>
+            <input type="number" id="consecutiveDays" step="1" min="1">
+        </div>
+        <button id="applyThresholdsBtn">Apply & Refresh</button>
+        <button id="resetThresholdsBtn">Reset Defaults</button>
     </div>
       <div class="row">
         <div class="col-12">
