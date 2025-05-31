@@ -23,7 +23,7 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 20px; /* Consistent padding on all sides */
             background-color: #f0f2f5;
             display: flex;
             justify-content: center;
@@ -34,11 +34,11 @@
 
         .container {
             background-color: #ffffff;
-            padding: 30px 40px;
+            padding: 30px 40px; /* Default padding for larger screens */
             border-radius: 12px;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
             max-width: 800px;
-            width: 100%;
+            width: 100%; /* Ensures it's always responsive */
             box-sizing: border-box;
             text-align: center;
         }
@@ -129,8 +129,8 @@
         .county-name-group {
             display: flex;
             align-items: center;
-            flex-wrap: wrap;
-            max-width: 70%;
+            flex-wrap: wrap; /* Allows icons to wrap below name if space is tight */
+            max-width: 70%; /* Give space for status and arrow on wide screens */
         }
 
         .county-name-text {
@@ -140,7 +140,7 @@
         /* Generic tooltip container styles */
         .tooltip-container {
             position: relative;
-            display: inline-block;
+            display: inline-block; /* Keep icon on same line as name if space allows */
             margin-left: 5px;
             cursor: help;
         }
@@ -149,7 +149,7 @@
         .tooltip-content {
             visibility: hidden;
             opacity: 0;
-            width: 200px;
+            width: 200px; /* Default width for desktop */
             background-color: #333;
             color: #fff;
             text-align: center;
@@ -157,9 +157,9 @@
             padding: 8px 10px;
             position: absolute;
             z-index: 1;
-            bottom: 125%;
+            bottom: 125%; /* Position above the icon */
             left: 50%;
-            margin-left: -100px;
+            margin-left: -100px; /* Half of width to center */
             font-size: 0.85em;
             box-shadow: 0 2px 10px rgba(0,0,0,0.3);
             transition: opacity 0.3s;
@@ -204,11 +204,9 @@
             text-align: right;
         }
 
-        /* Redefined 'status-yes' as 'status-red' */
         .status-red {
             color: #e74c3c; /* Strong red */
         }
-        /* New Amber status */
         .status-amber {
             color: #f39c12; /* Orange/Amber color */
         }
@@ -239,7 +237,7 @@
         }
 
         .warning-reason-container.expanded {
-            max-height: 200px;
+            max-height: 200px; /* Adjust as needed or use a very large value */
         }
 
         .warning-reason-detail {
@@ -377,7 +375,7 @@
             .county-name-group {
                 flex-direction: column;
                 align-items: flex-start;
-                max-width: 100%;
+                max-width: 100%; /* Allow full width on mobile */
             }
 
             .county-name-text {
@@ -386,20 +384,21 @@
             }
 
             .tooltip-container {
-                margin-left: 0;
-                margin-top: 5px;
+                margin-left: 0; /* Remove horizontal margin */
+                margin-top: 5px; /* Add vertical space when stacked */
                 font-size: 0.9em;
             }
 
             .tooltip-content {
-                width: 150px;
-                left: 0;
-                margin-left: 0;
-                bottom: 100%;
-                text-align: left;
+                width: 150px; /* Smaller width for mobile */
+                left: 0; /* Align to the left of the icon */
+                margin-left: 0; /* Reset margin */
+                bottom: 100%; /* Keep above icon */
+                text-align: left; /* Align text left inside tooltip */
+                transform: translateX(0); /* Ensure no horizontal transform issues */
             }
             .tooltip-content::after {
-                left: 20px;
+                left: 20px; /* Adjust arrow position for mobile */
             }
 
             .status-text {
@@ -423,11 +422,11 @@
             }
 
             #developerTools {
-                width: calc(100% - 40px);
+                width: calc(100% - 40px); /* Take full width minus padding */
                 bottom: 10px;
                 right: 10px;
-                left: 10px;
-                max-width: none;
+                left: 10px; /* Center it */
+                max-width: none; /* Remove max-width constraint */
             }
         }
 
