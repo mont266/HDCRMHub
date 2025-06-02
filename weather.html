@@ -2,32 +2,30 @@
 <html lang="en">
 
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NKD92C8VMD"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag() { dataLayer.push(arguments); }
-        gtag('js', new Date());
+  
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-NKD92C8VMD"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
 
-        gtag('config', 'G-NKD92C8VMD');
-    </script>
+    gtag('config', 'G-NKD92C8VMD');
+  </script>
 
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <link rel="apple-touch-icon" sizes="76x76" href="assets/img/apple-icon.png">
   <link rel="icon" type="image/png" href="assets/img/favicon.ico">
   <title>
     CRM Hub
   </title>
-  <!--     Fonts and icons     -->
   <link href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,800" rel="stylesheet" />
-  <!-- Nucleo Icons -->
   <link href="https://demos.creative-tim.com/soft-ui-dashboard/assets/css/nucleo-icons.css" rel="stylesheet" />
   <link href="https://demos.creative-tim.com/soft-ui-dashboard/assets/css/nucleo-svg.css" rel="stylesheet" />
-  <!-- Font Awesome Icons -->
   <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
-  <!-- CSS Files -->
   <link id="pagestyle" href="assets/css/soft-ui-dashboard.css?v=1.1.0" rel="stylesheet" />
+  
   <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -42,7 +40,7 @@
         }
 
         .container {
-            background-color: #ffffff;
+             background-color: #ffffff;
             padding: 30px 40px; /* Default padding for larger screens */
             border-radius: 12px;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
@@ -58,7 +56,7 @@
             font-size: 2.2em;
         }
 
-        p {
+        p { 
             color: #7f8c8d;
             font-size: 0.95em;
             margin-top: 0;
@@ -85,6 +83,78 @@
         #fetchWeatherBtn:active {
             transform: translateY(0);
         }
+
+        /* --- Search Bar and Icon Styles --- */
+        #searchContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            padding: 0 10px;
+        }
+
+        #searchIcon {
+            font-size: 1.4em;
+            color: #7f8c8d;
+            transition: color 0.2s ease;
+            display: none;
+            margin-right: 5px;
+        }
+
+        #countySearchInput {
+            width: 0;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: width 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
+            opacity: 0;
+            box-sizing: border-box;
+            flex-grow: 1;
+            max-width: 300px;
+        }
+
+        #countySearchInput.active {
+            width: 100%;
+            opacity: 1;
+            padding: 8px 10px;
+        }
+        /* --- End Search Bar and Icon Styles --- */
+
+        /* --- Filter Toggle Styles --- */
+        #filterToggleContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 20px;
+            padding: 0 10px;
+            box-sizing: border-box;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        #filterToggleContainer.active {
+            opacity: 1;
+        }
+
+        #showWarningsLabel {
+            color: #555;
+            font-size: 0.95em;
+            margin-right: 8px;
+            white-space: nowrap;
+        }
+
+        #showWarningsToggle {
+            transform: scale(1.2);
+            cursor: pointer;
+            accent-color: #3498db;
+        }
+        /* --- End Filter Toggle Styles --- */
+
 
         .country-section {
             margin-top: 30px;
@@ -116,6 +186,28 @@
             align-items: flex-start;
             font-size: 1.1em;
             color: #333;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out, border-bottom 0.3s ease-out, opacity 0.3s ease-out;
+            max-height: 100px;
+            opacity: 1;
+        }
+
+        .county-summary.expanded + .warning-reason-container {
+            max-height: 5000px;
+        }
+
+        #countyList li.expanded-parent {
+            max-height: 5000px;
+            overflow: visible;
+        }
+
+
+        #countyList li.hidden {
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+            opacity: 0;
         }
 
         #countyList li:last-child {
@@ -138,8 +230,8 @@
         .county-name-group {
             display: flex;
             align-items: center;
-            flex-wrap: wrap; /* Allows icons to wrap below name if space is tight */
-            max-width: 70%; /* Give space for status and arrow on wide screens */
+            flex-wrap: wrap;
+            max-width: 70%;
         }
 
         .county-name-text {
@@ -149,7 +241,7 @@
         /* Generic tooltip container styles */
         .tooltip-container {
             position: relative;
-            display: inline-block; /* Keep icon on same line as name if space allows */
+            display: inline-block;
             margin-left: 5px;
             cursor: help;
         }
@@ -158,7 +250,7 @@
         .tooltip-content {
             visibility: hidden;
             opacity: 0;
-            width: 200px; /* Default width for desktop */
+            width: 200px;
             background-color: #333;
             color: #fff;
             text-align: center;
@@ -166,9 +258,9 @@
             padding: 8px 10px;
             position: absolute;
             z-index: 1;
-            bottom: 125%; /* Position above the icon */
+            bottom: 125%;
             left: 50%;
-            margin-left: -100px; /* Half of width to center */
+            margin-left: -100px;
             font-size: 0.85em;
             box-shadow: 0 2px 10px rgba(0,0,0,0.3);
             transition: opacity 0.3s;
@@ -214,10 +306,10 @@
         }
 
         .status-red {
-            color: #e74c3c; /* Strong red */
+            color: #e74c3c;
         }
         .status-amber {
-            color: #f39c12; /* Orange/Amber color */
+            color: #f39c12;
         }
         .status-no {
             color: #27ae60;
@@ -246,7 +338,7 @@
         }
 
         .warning-reason-container.expanded {
-            max-height: 200px; /* Adjust as needed or use a very large value */
+            max-height: 5000px;
         }
 
         .warning-reason-detail {
@@ -364,6 +456,33 @@
                 margin-bottom: 20px;
             }
 
+            /* Adjust search bar for mobile */
+            #searchContainer {
+                position: static;
+                margin-bottom: 15px;
+                justify-content: center;
+                padding: 0 10px;
+                max-width: 100%;
+                margin-top: 10px;
+            }
+
+            #searchIcon {
+                margin-left: 0;
+                margin-bottom: 10px;
+            }
+
+            #countySearchInput.active {
+                width: calc(100% - 20px);
+                margin: 0 auto;
+            }
+
+            /* Filter toggle for mobile */
+            #filterToggleContainer {
+                justify-content: center;
+                padding: 0 10px;
+                margin-bottom: 10px;
+            }
+
             .country-section h2 {
                 font-size: 1.4em;
                 margin-bottom: 10px;
@@ -384,7 +503,7 @@
             .county-name-group {
                 flex-direction: column;
                 align-items: flex-start;
-                max-width: 100%; /* Allow full width on mobile */
+                max-width: 100%;
             }
 
             .county-name-text {
@@ -393,21 +512,20 @@
             }
 
             .tooltip-container {
-                margin-left: 0; /* Remove horizontal margin */
-                margin-top: 5px; /* Add vertical space when stacked */
+                margin-left: 0;
+                margin-top: 5px;
                 font-size: 0.9em;
             }
 
             .tooltip-content {
-                width: 150px; /* Smaller width for mobile */
-                left: 0; /* Align to the left of the icon */
-                margin-left: 0; /* Reset margin */
-                bottom: 100%; /* Keep above icon */
-                text-align: left; /* Align text left inside tooltip */
-                transform: translateX(0); /* Ensure no horizontal transform issues */
+                width: 150px;
+                left: 0;
+                margin-left: 0;
+                bottom: 100%;
+                text-align: left;
             }
             .tooltip-content::after {
-                left: 20px; /* Adjust arrow position for mobile */
+                left: 20px;
             }
 
             .status-text {
@@ -431,11 +549,11 @@
             }
 
             #developerTools {
-                width: calc(100% - 40px); /* Take full width minus padding */
+                width: calc(100% - 40px);
                 bottom: 10px;
                 right: 10px;
-                left: 10px; /* Center it */
-                max-width: none; /* Remove max-width constraint */
+                left: 10px;
+                max-width: none;
             }
         }
 
@@ -682,38 +800,48 @@
     </nav>
     <!-- End Navbar -->
     <div class="container-fluid py-4">
-      <!--WEATHER CODE HERE-->
-      <div class="container">
-        <h1>UK Weather Warning Status</h1>
-        <p><em>This displays a "Possible Red Warning" based on high wind or heavy rain forecasts, not official Met Office warnings.</em></p>
-
-        <button id="fetchWeatherBtn">Get Latest Weather Warnings</button>
-
-        <div id="countyList">
-            <p class="loading-message">Click the button above to load weather warnings.</p>
+        <div class="container">
+            <h1>UK Weather Warning Status</h1>
+            <p><em>This displays a "Possible Red Warning" based on high wind or heavy rain forecasts, not official Met
+                    Office warnings. Heatwave and Storm detections are simplified.</em></p>
+    
+            <button id="fetchWeatherBtn">Get Latest Weather Warnings</button>
+    
+            <div id="countyList">
+                <p class="loading-message">Click the button above to load weather warnings.</p>
+            </div>
+    
+            <div id="searchContainer">
+                <input type="text" id="countySearchInput" placeholder="Search county..." aria-label="Search county">
+                <span id="searchIcon" title="Search">&#128269;</span>
+            </div>
+    
+            <div id="filterToggleContainer">
+                <label for="showWarningsToggle" id="showWarningsLabel">Only show warnings</label>
+                <input type="checkbox" id="showWarningsToggle">
+            </div>
         </div>
-    </div>
-    <div id="developerTools">
+      <div id="developerTools">
         <h2>Developer Tools</h2>
         <div>
-            <label for="windThreshold">Wind Threshold (mph):</label>
-            <input type="number" id="windThreshold" step="0.1">
+          <label for="windThreshold">Wind Threshold (mph):</label>
+          <input type="number" id="windThreshold" step="0.1">
         </div>
         <div>
-            <label for="rainThreshold">Rain Threshold (mm/hr):</label>
-            <input type="number" id="rainThreshold" step="0.1">
+          <label for="rainThreshold">Rain Threshold (mm/hr):</label>
+          <input type="number" id="rainThreshold" step="0.1">
         </div>
         <div>
-            <label for="heatwaveThreshold">Heatwave Threshold (°C):</label>
-            <input type="number" id="heatwaveThreshold" step="1">
+          <label for="heatwaveThreshold">Heatwave Threshold (°C):</label>
+          <input type="number" id="heatwaveThreshold" step="1">
         </div>
         <div>
-            <label for="consecutiveDays">Consecutive Days (Heatwave):</label>
-            <input type="number" id="consecutiveDays" step="1" min="1">
+          <label for="consecutiveDays">Consecutive Days (Heatwave):</label>
+          <input type="number" id="consecutiveDays" step="1" min="1">
         </div>
         <button id="applyThresholdsBtn">Apply & Refresh</button>
         <button id="resetThresholdsBtn">Reset Defaults</button>
-    </div>
+      </div>
       <div class="row">
         <div class="col-12">
           <div class="card mb-4">
@@ -736,20 +864,20 @@
                       <td>
                         <div class="d-flex px-2">
                           <div>
-                            <img src="assets/img/small-logos/rocket-white.png" class="avatar avatar-sm rounded-circle me-2" alt="web-dev">
+                            <img src="assets/img/small-logos/logo-webdev.svg" class="avatar avatar-sm rounded-circle me-2" alt="web-dev">
                           </div>
                           <div class="my-auto">
-                            <a href="testcalc.html">A/B Test Significance Calculator</h6></a>
+                            <a href="testcalc.html">A/B Test Significance Calculator</a>
                           </div>
                         </div>
                       </td>
                       <td>
                         <div class="d-flex px-2">
                           <div>
-                            <img src="assets/img/small-logos/alert_icon.png" class="avatar avatar-sm rounded-circle me-2" alt="calendar">
+                            <img src="assets/img/small-logos/calendar.png" class="avatar avatar-sm rounded-circle me-2" alt="calendar">
                           </div>
                           <div class="my-auto">
-                            <a href="AlertThresholdCalc.html">Braze Alerts Threshold Calc</h6></a>
+                            <a href="AlertThresholdCalc.html">Braze Alerts Threshold Calc</a>
                           </div>
                         </div>
                       </td>
@@ -779,7 +907,7 @@
           </div>
         </div>
       </div>
-      <footer class="footer pt-3  ">
+      <footer class="footer pt-3 ">
         <div class="container-fluid">
           <div class="row align-items-center justify-content-lg-between">
             <div class="col-lg-6 mb-lg-0 mb-4">
@@ -791,8 +919,7 @@
       </footer>
     </div>
   </main>
-  <!--   Core JS Files   -->
-  <script src="js/weatherwarnings.js"></script>
+  <script src="js/weatherwarnings.js"></script> 
   <script src="assets/js/core/popper.min.js"></script>
   <script src="assets/js/core/bootstrap.min.js"></script>
   <script src="assets/js/plugins/perfect-scrollbar.min.js"></script>
@@ -806,9 +933,7 @@
       Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
     }
   </script>
-  <!-- Github buttons -->
   <script async defer src="https://buttons.github.io/buttons.js"></script>
-  <!-- Control Center for Soft Dashboard: parallax effects, scripts for the example pages etc -->
   <script src="assets/js/soft-ui-dashboard.min.js?v=1.1.0"></script>
 </body>
 
