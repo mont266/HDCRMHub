@@ -532,9 +532,9 @@ function saveThresholds() {
     localStorage.setItem('dev_consecutiveDays', currentConsecutiveDays);
 }
 
-// Event listener for keyboard shortcut (Ctrl + Shift + D)
+// Event listener for keyboard shortcut (Ctrl + Shift + F)
 document.addEventListener('keydown', (event) => {
-    if (event.ctrlKey && event.shiftKey && event.key === 'D') {
+    if (event.ctrlKey && event.shiftKey && event.key === 'F') {
         event.preventDefault(); // Prevent default browser action for this key combo
         if (devToolsPanel.style.display === 'none' || devToolsPanel.style.display === '') {
             devToolsPanel.style.display = 'flex';
