@@ -31,6 +31,16 @@
   <link id="pagestyle" href="assets/css/soft-ui-dashboard.css?v=1.1.0" rel="stylesheet" />
   <style>
         /* Custom styles for Inter font and general layout */
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            /* Re-centered the container */
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f4f8; /* Light background */
+            margin: 0;
+        }
         .container {
             background-color: #ffffff; /* White background for the card */
             padding: 2.5rem; /* Increased padding */
@@ -61,6 +71,28 @@
             border-radius: 0.25rem; /* Slightly rounded checkbox */
             border: 1px solid #cbd5e1;
             accent-color: #3b82f6; /* Blue accent color for checkbox */
+            margin-right: 0.5rem; /* Add some space between checkbox and label */
+            vertical-align: middle; /* Ensure vertical alignment with text */
+            flex-shrink: 0; /* Prevent checkbox from shrinking */
+        }
+        label {
+            color: #475569; /* Slightly darker label text */
+            font-weight: 500; /* Medium font weight */
+            text-align: left; /* Align label text to the left */
+            display: inline-block; /* Allow label to sit next to checkbox */
+            vertical-align: middle; /* Align label text vertically with checkbox */
+            font-size: 1rem; /* Ensure consistent font size */
+            line-height: 1.5rem; /* Ensure consistent line height for multi-line text */
+            flex-grow: 1; /* Allow label to grow and take available space */
+            white-space: normal; /* Allow text to wrap naturally */
+        }
+        .result-label {
+            font-weight: 600; /* Bold for result labels */
+            color: #1e293b; /* Even darker for result labels */
+        }
+        .result-value {
+            font-weight: 700; /* Extra bold for result values */
+            color: #0f172a; /* Very dark for result values */
         }
         /* Style for the new Calculate button */
         .calculate-button {
@@ -84,6 +116,10 @@
             background-color: #1d4ed8; /* Even darker on active */
             transform: translateY(0); /* Return to original position */
             box-shadow: 0 2px 5px rgba(59, 130, 246, 0.4); /* Smaller shadow on active */
+        }
+        /* Utility class to hide elements */
+        .hidden {
+            display: none;
         }
     </style>
 </head>
@@ -313,22 +349,38 @@
             <div class="card-body px-0 pt-0 pb-2">
               <div class="table-responsive p-0">
                     <div class="container flex flex-col items-center space-y-6">
-        <h1 class="text-3xl font-bold text-gray-800 mb-4">Alert Threshold Calculator</h1>
+        <h1 class="text-3xl font-bold text-gray-800 mb-4">Volume Threshold Calculator</h1>
 
-        <div class="w-full">
+        <!-- Send Volume Input -->
+        <div class="w-full mb-6">
             <label for="sendVolume" class="mb-2 text-gray-700">Send volume</label>
             <input type="number" id="sendVolume" placeholder="Enter volume" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
         </div>
 
-        <div class="w-full flex items-center justify-start space-x-3">
-            <input type="checkbox" id="globalControl" class="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500">
-            <label for="globalControl" class="text-gray-700 cursor-pointer">Does global control receive this comms?</label>
+        <!-- Is there a send limit? Checkbox -->
+        <div class="w-full flex items-start justify-start mb-4">
+            <input type="checkbox" id="hasSendLimit" class="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500 flex-shrink-0">
+            <label for="hasSendLimit" class="text-gray-700 cursor-pointer flex-grow whitespace-normal">Is there a send limit?</label>
         </div>
 
+        <!-- Daily Send Limit Input (initially hidden) -->
+        <div class="w-full hidden mb-4" id="dailySendLimitContainer">
+            <label for="dailySendLimit" class="mb-2 text-gray-700">Daily Send Limit</label>
+            <input type="number" id="dailySendLimit" placeholder="Enter daily send limit" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <!-- Global Control Checkbox -->
+        <div class="w-full flex items-start justify-start mb-6">
+            <input type="checkbox" id="globalControl" class="form-checkbox h-5 w-5 text-blue-600 rounded focus:ring-blue-500 flex-shrink-0">
+            <label for="globalControl" class="text-gray-700 cursor-pointer flex-grow whitespace-normal">Global Control tag?</label>
+        </div>
+
+        <!-- Calculate Button -->
         <div class="w-full mt-4">
             <button id="calculateButton" class="calculate-button">Calculate</button>
         </div>
 
+        <!-- Results Display -->
         <div class="w-full text-left space-y-3 pt-4 border-t border-gray-200 mt-6">
             <p class="text-lg">
                 <span class="result-label">Lower Threshold:</span>

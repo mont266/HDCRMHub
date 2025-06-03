@@ -3,53 +3,61 @@ const sendVolumeInput = document.getElementById('sendVolume');
 const globalControlCheckbox = document.getElementById('globalControl');
 const lowerThresholdDisplay = document.getElementById('lowerThreshold');
 const upperThresholdDisplay = document.getElementById('upperThreshold');
-const calculateButton = document.getElementById('calculateButton'); // Reference to the calculate button
+const calculateButton = document.getElementById('calculateButton');
+
+// New elements for send limit feature
+const hasSendLimitCheckbox = document.getElementById('hasSendLimit');
+const dailySendLimitContainer = document.getElementById('dailySendLimitContainer');
+const dailySendLimitInput = document.getElementById('dailySendLimit');
 
 /**
  * Calculates and displays the lower and upper thresholds based on send volume and global control.
+ * It now also considers a daily send limit if specified.
  */
 function calculateThresholds() {
-    // Log to console to confirm this function is being called
     console.log('Calculating thresholds...');
 
-    // Get the numerical value from the send volume input.
-    // Use parseFloat to ensure it's a number. If the input is empty or not a valid number,
-    // parseFloat will return NaN (Not-a-Number), which defaults to 0 using the || operator.
-    const sendVolume = parseFloat(sendVolumeInput.value) || 0;
-    console.log('Send Volume:', sendVolume);
+    // Determine the base volume for calculation
+    let baseVolume = parseFloat(sendVolumeInput.value) || 0;
+    console.log('Initial Send Volume:', baseVolume);
 
-    // Get the checked state of the global control checkbox
+    // Check if a send limit is active and use it as the base volume if valid
+    if (hasSendLimitCheckbox.checked) {
+        const dailySendLimit = parseFloat(dailySendLimitInput.value) || 0;
+        if (dailySendLimit > 0) { // Only use send limit if it's a positive number
+            baseVolume = dailySendLimit;
+            console.log('Using Daily Send Limit as base volume:', baseVolume);
+        } else {
+            console.log('Send limit checkbox ticked, but daily send limit is invalid or zero. Using initial send volume.');
+        }
+    }
+
+    console.log('Base Volume for calculation:', baseVolume);
+
     const isGlobalControlTicked = globalControlCheckbox.checked;
     console.log('Global Control Ticked:', isGlobalControlTicked);
 
-    let lowerThresholdPercentage; // These will store the percentage rates (e.g., 0.11, 0.01)
+    let lowerThresholdPercentage;
     let upperThresholdPercentage;
 
     // Determine the percentage rates based on the global control state
     if (isGlobalControlTicked) {
-        // If global control is ticked:
-        // Lower threshold = 11%
-        // Upper threshold = 1%
-        lowerThresholdPercentage = 0.11;
-        upperThresholdPercentage = 0.01;
+        lowerThresholdPercentage = 0.11; // 11%
+        upperThresholdPercentage = 0.01;  // 1%
     } else {
-        // If global control is not ticked:
-        // Lower threshold = 2%
-        // Upper threshold = 1%
-        lowerThresholdPercentage = 0.02;
-        upperThresholdPercentage = 0.01;
+        lowerThresholdPercentage = 0.02;  // 2%
+        upperThresholdPercentage = 0.01;  // 1%
     }
 
-    // Calculate the actual threshold amounts
-    const lowerThresholdAmount = sendVolume * lowerThresholdPercentage;
-    const upperThresholdAmount = sendVolume * upperThresholdPercentage;
+    // Calculate the actual threshold amounts based on the determined baseVolume
+    const lowerThresholdAmount = baseVolume * lowerThresholdPercentage;
+    const upperThresholdAmount = baseVolume * upperThresholdPercentage;
 
-    // Calculate the final displayed values: send volume + threshold amount
-    const displayedLowerThreshold = sendVolume + lowerThresholdAmount;
-    const displayedUpperThreshold = sendVolume + upperThresholdAmount;
+    // Calculate the final displayed values: base volume + threshold amount
+    const displayedLowerThreshold = baseVolume + lowerThresholdAmount;
+    const displayedUpperThreshold = baseVolume + upperThresholdAmount;
 
-    // Round down the results to the nearest whole number (no decimal points)
-    // Then, format the numbers with comma separators for thousands
+    // Round down the results to the nearest whole number and format with commas
     lowerThresholdDisplay.textContent = Math.floor(displayedLowerThreshold).toLocaleString();
     upperThresholdDisplay.textContent = Math.floor(displayedUpperThreshold).toLocaleString();
 
@@ -61,21 +69,45 @@ function calculateThresholds() {
     console.log('Displayed Upper Threshold (rounded down and formatted):', Math.floor(displayedUpperThreshold).toLocaleString());
 }
 
-// Attach an event listener to the "Calculate" button.
-// The 'click' event will trigger the calculateThresholds function.
+/**
+ * Toggles the visibility of the daily send limit input field.
+ */
+function toggleDailySendLimitInput() {
+    if (hasSendLimitCheckbox.checked) {
+        dailySendLimitContainer.classList.remove('hidden');
+    } else {
+        dailySendLimitContainer.classList.add('hidden');
+        dailySendLimitInput.value = ''; // Clear the input when hidden
+    }
+    // No calculateThresholds() call here, as we only want updates on button click
+}
+
+// Event Listeners
 calculateButton.addEventListener('click', calculateThresholds);
 
-// Add an event listener to the sendVolume input field to detect 'Enter' key presses.
+// Listen for 'Enter' key press on the original send volume input
 sendVolumeInput.addEventListener('keydown', function(event) {
-    // Check if the pressed key is 'Enter' (key code 13 for older browsers, 'Enter' for modern).
     if (event.key === 'Enter') {
-        // Prevent the default action (e.g., form submission if it were part of a form)
         event.preventDefault();
-        // Trigger the calculation
         calculateThresholds();
     }
 });
 
-// Initial calculation when the page loads.
-// This ensures that default values (0.00) are displayed even before the user interacts.
-calculateThresholds();
+// Listen for 'Enter' key press on the new daily send limit input
+dailySendLimitInput.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        calculateThresholds();
+    }
+});
+
+// Listen for changes on the 'Is there a send limit?' checkbox
+hasSendLimitCheckbox.addEventListener('change', toggleDailySendLimitInput);
+
+// Removed: dailySendLimitInput.addEventListener('input', calculateThresholds);
+// The thresholds will now only update when the 'Calculate' button is clicked
+// or 'Enter' is pressed in either input field.
+
+// Initial setup and calculation when the page loads
+toggleDailySendLimitInput(); // Set initial visibility of send limit input
+calculateThresholds(); // Perform initial calculation
