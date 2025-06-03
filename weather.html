@@ -805,21 +805,18 @@
             <p><em>This displays a "Possible Red Warning" based on high wind or heavy rain forecasts, not official Met
                     Office warnings. Heatwave and Storm detections are simplified.</em></p>
     
-            <button id="fetchWeatherBtn">Get Latest Weather Warnings</button>
-    
-            <div id="countyList">
-                <p class="loading-message">Click the button above to load weather warnings.</p>
-            </div>
-    
-            <div id="searchContainer">
-                <input type="text" id="countySearchInput" placeholder="Search county..." aria-label="Search county">
-                <span id="searchIcon" title="Search">&#128269;</span>
-            </div>
-    
-            <div id="filterToggleContainer">
-                <label for="showWarningsToggle" id="showWarningsLabel">Only show warnings</label>
-                <input type="checkbox" id="showWarningsToggle">
-            </div>
+            <button id="fetchWeatherBtn">Get the Latest Weather Warnings</button>
+
+<div id="searchContainer" style="display: none;"> <span id="searchIcon">🔍</span>
+    <input type="text" id="countySearchInput" placeholder="Search by county...">
+</div>
+
+<div id="filterToggleContainer" style="display: none;"> <label for="showWarningsToggle">Show only warnings:</label>
+    <input type="checkbox" id="showWarningsToggle">
+</div>
+
+<div id="countyList">
+    </div>
         </div>
       <div id="developerTools">
         <h2>Developer Tools</h2>

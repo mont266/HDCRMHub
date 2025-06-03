@@ -2,7 +2,6 @@
 // const KPH_TO_MPH = 0.621371;
 
 // --- DEFAULT THRESHOLDS ---
-// Updated wind threshold to be directly in MPH, equivalent to the previous 60 KPH (approx 37.28 mph)
 const DEFAULT_WIND_THRESHOLD_MPH = 37.28;
 const DEFAULT_RAIN_THRESHOLD_MM_HR = 5; // 5 mm/hr
 const DEFAULT_HEATWAVE_THRESHOLD_C = 25; // 25°C
@@ -72,35 +71,30 @@ async function fetchWeatherForCounty(county) {
         }
         const data = await response.json();
 
-        // --- Wind/Rain Warning Logic (extended to 4 days) ---
-        // Directly use wind_mph from the API response
         const currentWindMph = data.current?.wind_mph || 0;
         const currentPrecipMm = data.current?.precip_mm || 0;
 
         let hasSevereForecast = false;
         let forecastReasonDetails = [];
 
-        // --- Storm Warning Logic ---
         let hasStormWarning = false;
-        let stormMessage = ''; // Will store details of the first triggered storm condition
+        let stormMessage = '';
 
         if (data.forecast?.forecastday) {
             for (const dayForecast of data.forecast.forecastday) {
                 if (dayForecast.hour) {
                     for (const hourData of dayForecast.hour) {
-                        // Directly use wind_mph from the API response for hourly data
                         const forecastWindMph = hourData.wind_mph;
                         const forecastPrecipMm = hourData.precip_mm;
 
                         let conditionsAtHour = [];
-                        if (forecastWindMph > currentWindThresholdMph) { // Use dynamic threshold
+                        if (forecastWindMph > currentWindThresholdMph) {
                             conditionsAtHour.push(`Wind ${forecastWindMph.toFixed(1)}mph`);
                         }
-                        if (forecastPrecipMm > currentRainThresholdMmHr) { // Use dynamic threshold
+                        if (forecastPrecipMm > currentRainThresholdMmHr) {
                             conditionsAtHour.push(`Rain ${forecastPrecipMm.toFixed(1)}mm/hr`);
                         }
 
-                        // Check for general severe warning (wind OR rain)
                         if (conditionsAtHour.length > 0) {
                             hasSevereForecast = true;
                             const dateTime = new Date(hourData.time).toLocaleString('en-GB', {
@@ -113,9 +107,8 @@ async function fetchWeatherForCounty(county) {
                             forecastReasonDetails.push(`${dateTime}: ${conditionsAtHour.join(', ')}`);
                         }
 
-                        // Check for "storm" condition (wind AND rain simultaneously)
-                        if (forecastWindMph > currentWindThresholdMph && forecastPrecipMm > currentRainThresholdMmHr) { // Use dynamic thresholds
-                            if (!hasStormWarning) { // Only capture details of the first instance
+                        if (forecastWindMph > currentWindThresholdMph && forecastPrecipMm > currentRainThresholdMmHr) {
+                            if (!hasStormWarning) {
                                 hasStormWarning = true;
                                 const stormDateTime = new Date(hourData.time).toLocaleString('en-GB', {
                                     weekday: 'short',
@@ -132,14 +125,13 @@ async function fetchWeatherForCounty(county) {
             }
         }
 
-
-        let reasons = []; // Reasons for the "YES" dropdown
-        if (currentWindMph > currentWindThresholdMph || currentPrecipMm > currentRainThresholdMmHr) { // Use dynamic thresholds
+        let reasons = [];
+        if (currentWindMph > currentWindThresholdMph || currentPrecipMm > currentRainThresholdMmHr) {
             let currentConditions = [];
-            if (currentWindMph > currentWindThresholdMph) { // Use dynamic threshold
+            if (currentWindMph > currentWindThresholdMph) {
                 currentConditions.push(`Wind ${currentWindMph.toFixed(1)} mph`);
             }
-            if (currentPrecipMm > currentRainThresholdMmHr) { // Use dynamic threshold
+            if (currentPrecipMm > currentRainThresholdMmHr) {
                 currentConditions.push(`Rain ${currentPrecipMm.toFixed(1)} mm/hr`);
             }
             reasons.push(`Current conditions: ${currentConditions.join(' & ')}`);
@@ -150,20 +142,18 @@ async function fetchWeatherForCounty(county) {
             reasons = reasons.concat(forecastReasonDetails);
         }
 
-        const isRedWarningCondition = (currentWindMph > currentWindThresholdMph || currentPrecipMm > currentRainThresholdMmHr || hasSevereForecast); // Use dynamic thresholds
+        const isRedWarningCondition = (currentWindMph > currentWindThresholdMph || currentPrecipMm > currentRainThresholdMmHr || hasSevereForecast);
 
-
-        // --- Heatwave Logic ---
         let hasHeatwave = false;
         let heatwaveMessage = '';
 
-        if (data.forecast?.forecastday && data.forecast.forecastday.length >= currentConsecutiveDays) { // Use dynamic consecutive days
+        if (data.forecast?.forecastday && data.forecast.forecastday.length >= currentConsecutiveDays) {
             let consecutiveHotDays = 0;
             let heatwaveStartDayIndex = -1;
 
             for (let i = 0; i < data.forecast.forecastday.length; i++) {
                 const day = data.forecast.forecastday[i].day;
-                if (day.maxtemp_c >= currentHeatwaveThresholdC) { // Use dynamic threshold
+                if (day.maxtemp_c >= currentHeatwaveThresholdC) {
                     if (consecutiveHotDays === 0) {
                         heatwaveStartDayIndex = i;
                     }
@@ -173,11 +163,11 @@ async function fetchWeatherForCounty(county) {
                     heatwaveStartDayIndex = -1;
                 }
 
-                if (consecutiveHotDays >= currentConsecutiveDays) { // Use dynamic consecutive days
+                if (consecutiveHotDays >= currentConsecutiveDays) {
                     hasHeatwave = true;
                     let totalHeatwaveDays = 0;
                     for (let j = heatwaveStartDayIndex; j < data.forecast.forecastday.length; j++) {
-                        if (data.forecast.forecastday[j].day.maxtemp_c >= currentHeatwaveThresholdC) { // Use dynamic threshold
+                        if (data.forecast.forecastday[j].day.maxtemp_c >= currentHeatwaveThresholdC) {
                             totalHeatwaveDays++;
                         } else {
                             break;
@@ -205,41 +195,36 @@ async function fetchWeatherForCounty(county) {
     }
 }
 
-// Declare these variables globally so they can be accessed and assigned without redeclaration errors
+// Global references for elements that are *always* in the DOM after initial load.
+// These are assigned values in DOMContentLoaded.
 let searchIcon;
 let countySearchInput;
 let filterToggleContainer;
 let showWarningsToggle;
-let searchContainer; // Also declare searchContainer globally
-
+let searchContainer;
 
 async function displayWeatherWarnings() {
     const countyListElement = document.getElementById('countyList');
+    const fetchWeatherBtn = document.getElementById('fetchWeatherBtn');
+    fetchWeatherBtn.disabled = true;
+
+    // Hide search and filter elements at the start of loading.
+    // They are assumed to be static in the HTML and not moved/destroyed by innerHTML.
+    if (searchIcon) searchIcon.style.display = 'none';
+    if (countySearchInput) {
+        countySearchInput.classList.remove('active');
+        countySearchInput.value = ''; // Clear search input
+        countySearchInput.style.width = '0'; // Reset width for transition
+        countySearchInput.style.opacity = '0'; // Reset opacity for transition
+    }
+    if (filterToggleContainer) filterToggleContainer.classList.remove('active');
+    if (searchContainer) searchContainer.style.display = 'none'; // Hide the entire search container
+    if (filterToggleContainer) filterToggleContainer.style.display = 'none'; // Hide the entire filter toggle container
+
+    // Clear only the dynamic content area and show loading message
     countyListElement.innerHTML = '<p class="loading-message">Loading weather data... This may take a moment due to multiple API calls.</p>';
-    document.getElementById('fetchWeatherBtn').disabled = true;
-
-    // Get references to elements that are now part of the initial HTML structure
-    searchIcon = document.getElementById('searchIcon');
-    countySearchInput = document.getElementById('countySearchInput');
-    filterToggleContainer = document.getElementById('filterToggleContainer');
-    showWarningsToggle = document.getElementById('showWarningsToggle');
-    searchContainer = document.getElementById('searchContainer');
-
-
-    // Hide search and filter elements during load
-    searchIcon.style.display = 'none';
-    countySearchInput.classList.remove('active'); // Ensure hidden
-    countySearchInput.value = ''; // Clear search input
-    countySearchInput.style.width = '0'; // Reset width
-    countySearchInput.style.opacity = '0'; // Reset opacity
-    filterToggleContainer.classList.remove('active'); // Hide filter toggle
-    searchContainer.style.display = 'none'; // Hide the search container
-    filterToggleContainer.style.display = 'none'; // Hide the filter toggle container
-
 
     let hasOverallError = false;
-
-    // Store all list items to filter later
     const allCountyListItems = [];
 
     for (const country in ukCountiesByCategory) {
@@ -259,8 +244,8 @@ async function displayWeatherWarnings() {
         for (const county of ukCountiesByCategory[country]) {
             const weatherStatus = await fetchWeatherForCounty(county);
             const listItem = document.createElement('li');
-            listItem.dataset.countyName = county.toLowerCase(); // Store county name for searching
-            listItem.dataset.hasWarning = weatherStatus.hasWarning.toString(); // Store warning status for filtering
+            listItem.dataset.countyName = county.toLowerCase();
+            listItem.dataset.hasWarning = weatherStatus.hasWarning.toString();
 
             const countySummaryDiv = document.createElement('div');
             countySummaryDiv.classList.add('county-summary');
@@ -273,44 +258,35 @@ async function displayWeatherWarnings() {
             countyNameSpan.textContent = county;
             countyNameGroup.appendChild(countyNameSpan);
 
-            // --- Heatwave Icon and Tooltip ---
             if (weatherStatus.hasHeatwave) {
                 const heatwaveStatusSpan = document.createElement('span');
                 heatwaveStatusSpan.classList.add('tooltip-container');
-
                 const heatwaveIconSpan = document.createElement('span');
                 heatwaveIconSpan.classList.add('heatwave-icon');
                 heatwaveIconSpan.textContent = '🔥';
                 heatwaveStatusSpan.appendChild(heatwaveIconSpan);
-
                 const heatwaveTooltipSpan = document.createElement('span');
                 heatwaveTooltipSpan.classList.add('tooltip-content');
                 heatwaveTooltipSpan.textContent = `Heatwave ${weatherStatus.heatwaveMessage}`;
                 heatwaveStatusSpan.appendChild(heatwaveTooltipSpan);
-
                 countyNameGroup.appendChild(heatwaveStatusSpan);
             }
 
-            // --- Storm Icon and Tooltip ---
             if (weatherStatus.hasStormWarning) {
                 const stormStatusSpan = document.createElement('span');
                 stormStatusSpan.classList.add('tooltip-container');
-
                 const stormIconSpan = document.createElement('span');
                 stormIconSpan.classList.add('storm-icon');
-                stormIconSpan.textContent = '⛈️'; // Cloud with lightning and rain emoji
+                stormIconSpan.textContent = '⛈️';
                 stormStatusSpan.appendChild(stormIconSpan);
-
                 const stormTooltipSpan = document.createElement('span');
                 stormTooltipSpan.classList.add('tooltip-content');
                 stormTooltipSpan.textContent = `Storm: ${weatherStatus.stormMessage}`;
                 stormStatusSpan.appendChild(stormTooltipSpan);
-
                 countyNameGroup.appendChild(stormStatusSpan);
             }
 
             countySummaryDiv.appendChild(countyNameGroup);
-
 
             const statusAndArrowDiv = document.createElement('div');
             statusAndArrowDiv.classList.add('status-and-arrow');
@@ -323,16 +299,13 @@ async function displayWeatherWarnings() {
                 statusSpan.classList.add('status-error');
                 statusSpan.title = weatherStatus.reason.join(', ');
                 hasOverallError = true;
-            } else if (weatherStatus.hasWarning) { // Main wind/rain warning
+            } else if (weatherStatus.hasWarning) {
                 statusSpan.textContent = `YES`;
                 countySummaryDiv.classList.add('clickable');
 
-                // Determine if it's "Red-level YES" or "Amber-level YES"
                 if (weatherStatus.hasHeatwave || weatherStatus.hasStormWarning) {
-                    // If heatwave OR storm is present, it's a more severe condition
                     statusSpan.classList.add('status-red');
                 } else {
-                    // Only wind OR rain, but no heatwave AND no storm - less severe
                     statusSpan.classList.add('status-amber');
                 }
 
@@ -366,16 +339,16 @@ async function displayWeatherWarnings() {
                 countySummaryDiv.addEventListener('click', () => {
                     countySummaryDiv.classList.toggle('expanded');
                     reasonContainerDiv.classList.toggle('expanded');
-                    listItem.classList.toggle('expanded-parent'); // Toggle the new class on the li
+                    listItem.classList.toggle('expanded-parent');
                 });
             }
 
             ulElement.appendChild(listItem);
-            allCountyListItems.push(listItem); // Add to our list for filtering
+            allCountyListItems.push(listItem);
         }
     }
 
-    document.getElementById('fetchWeatherBtn').disabled = false;
+    fetchWeatherBtn.disabled = false;
 
     const currentLoadingMessage = countyListElement.querySelector('.loading-message');
     if (currentLoadingMessage) {
@@ -393,57 +366,55 @@ async function displayWeatherWarnings() {
     }
     countyListElement.prepend(completionMessage);
 
-    // Insert search and filter elements after the completion message
-    // The completionMessage is now the first child, so insert after it.
-    countyListElement.insertBefore(searchContainer, completionMessage.nextSibling);
-    countyListElement.insertBefore(filterToggleContainer, searchContainer.nextSibling);
-
+    // *******************************************************************
+    // REMOVED: Lines that inserted search/filter elements into countyListElement.
+    // These are no longer needed because the elements are assumed to be static in the HTML.
+    // countyListElement.insertBefore(searchContainer, completionMessage.nextSibling);
+    // countyListElement.insertBefore(filterToggleContainer, searchContainer.nextSibling);
+    // *******************************************************************
 
     // Show the search icon and search bar, and filter toggle after data is loaded
-    searchIcon.style.display = 'block';
-    countySearchInput.classList.add('active'); // Make search bar active
-    countySearchInput.style.width = '100%'; // Ensure width is set for transition
-    countySearchInput.style.opacity = '1'; // Ensure opacity is set for transition
-    filterToggleContainer.classList.add('active'); // Show filter toggle
-    searchContainer.style.display = 'flex'; // Show the search container
-    filterToggleContainer.style.display = 'flex'; // Show the filter toggle container
+    // These `if (element)` checks ensure elements exist before styling.
+    if (searchIcon) searchIcon.style.display = 'block';
+    if (countySearchInput) {
+        countySearchInput.classList.add('active');
+        countySearchInput.style.width = '100%';
+        countySearchInput.style.opacity = '1';
+    }
+    if (filterToggleContainer) filterToggleContainer.classList.add('active');
+    if (searchContainer) searchContainer.style.display = 'flex'; // Show the search container
+    if (filterToggleContainer) filterToggleContainer.style.display = 'flex'; // Show the filter toggle container
 
-
-    // Store the list items globally or pass them to the filter function
     window.allCountyListItems = allCountyListItems;
-    applyAllFilters(); // Apply filters initially after load (e.g., if toggle is pre-checked)
+    applyAllFilters(); // Apply filters initially after load
 }
 
 
 // --- Search and Filter Functionality Logic ---
-// Declare these globally as they are accessed by event listeners set up outside displayWeatherWarnings
-// and assigned values inside displayWeatherWarnings.
-// Removed 'const' from these declarations to avoid redeclaration errors.
-// const searchIcon = document.getElementById('searchIcon'); // Already declared above
-// const countySearchInput = document.getElementById('countySearchInput'); // Already declared above
-// const filterToggleContainer = document.getElementById('filterToggleContainer'); // Already declared above
-// const showWarningsToggle = document.getElementById('showWarningsToggle'); // Already declared above
 
-
-// No longer need a click listener for the search icon as it's not clickable for toggling.
-// The search bar will automatically appear after data loads.
-
-// Add event listeners here, after the elements are guaranteed to be in the DOM
-// (they are in the HTML, so they exist on script load, but their content/visibility is managed later)
 document.addEventListener('DOMContentLoaded', () => {
-    // Get initial references for event listeners that are set up once
+    // Get initial references for elements that are always present in the DOM.
+    // These assignments happen once when the page is fully loaded.
     searchIcon = document.getElementById('searchIcon');
     countySearchInput = document.getElementById('countySearchInput');
     filterToggleContainer = document.getElementById('filterToggleContainer');
     showWarningsToggle = document.getElementById('showWarningsToggle');
     searchContainer = document.getElementById('searchContainer'); // Ensure this is also referenced
 
-    countySearchInput.addEventListener('input', applyAllFilters);
-    showWarningsToggle.addEventListener('change', applyAllFilters);
+    // Attach event listeners here, after the elements are guaranteed to be in the DOM
+    if (countySearchInput) countySearchInput.addEventListener('input', applyAllFilters);
+    if (showWarningsToggle) showWarningsToggle.addEventListener('change', applyAllFilters);
 });
 
 
 function applyAllFilters() {
+    // Add checks here for robustness, although with the new HTML structure,
+    // these should always be found via getElementById in DOMContentLoaded.
+    if (!countySearchInput || !showWarningsToggle) {
+        console.warn("applyAllFilters called before search/toggle elements are ready. This should ideally not happen now.");
+        return;
+    }
+
     const searchTerm = countySearchInput.value.toLowerCase();
     const showOnlyWarnings = showWarningsToggle.checked;
     const countyListItems = window.allCountyListItems || [];
@@ -451,17 +422,17 @@ function applyAllFilters() {
     let anyCountiesVisible = false;
     const allCountrySections = document.querySelectorAll('.country-section');
 
-    // First, hide all sections to re-evaluate their visibility later
+    // Hide all sections initially to re-evaluate visibility
     allCountrySections.forEach(section => {
         section.style.display = 'none';
     });
 
     countyListItems.forEach(item => {
         const countyName = item.dataset.countyName;
-        const hasWarning = item.dataset.hasWarning === 'true'; // Get boolean value from data attribute
+        const hasWarning = item.dataset.hasWarning === 'true';
 
         let isVisibleBySearch = countyName.includes(searchTerm);
-        let isVisibleByWarningToggle = !showOnlyWarnings || hasWarning; // If toggle is off, always true. If on, must have warning.
+        let isVisibleByWarningToggle = !showOnlyWarnings || hasWarning;
 
         if (isVisibleBySearch && isVisibleByWarningToggle) {
             item.classList.remove('hidden');
@@ -475,14 +446,13 @@ function applyAllFilters() {
         }
     });
 
-    // Provide feedback if no results
     const countyListElement = document.getElementById('countyList');
     let noResultsMessage = countyListElement.querySelector('#noResultsMessage');
     if (!noResultsMessage) {
         noResultsMessage = document.createElement('p');
         noResultsMessage.id = 'noResultsMessage';
-        noResultsMessage.classList.add('loading-message'); // Reuse styling
-        noResultsMessage.style.color = '#e74c3c'; // Red color for no results
+        noResultsMessage.classList.add('loading-message');
+        noResultsMessage.style.color = '#e74c3c';
         countyListElement.appendChild(noResultsMessage);
     }
 
@@ -497,6 +467,7 @@ function applyAllFilters() {
 
 // --- Developer Tools Panel Logic ---
 
+// These elements are also assumed to be static in the HTML and always present
 const devToolsPanel = document.getElementById('developerTools');
 const windInput = document.getElementById('windThreshold');
 const rainInput = document.getElementById('rainThreshold');
@@ -505,26 +476,23 @@ const consecutiveDaysInput = document.getElementById('consecutiveDays');
 const applyBtn = document.getElementById('applyThresholdsBtn');
 const resetBtn = document.getElementById('resetThresholdsBtn');
 
-// Function to load thresholds from localStorage or use defaults
 function loadThresholds() {
     currentWindThresholdMph = parseFloat(localStorage.getItem('dev_windThreshold')) || DEFAULT_WIND_THRESHOLD_MPH;
     currentRainThresholdMmHr = parseFloat(localStorage.getItem('dev_rainThreshold')) || DEFAULT_RAIN_THRESHOLD_MM_HR;
     currentHeatwaveThresholdC = parseFloat(localStorage.getItem('dev_heatwaveThreshold')) || DEFAULT_HEATWAVE_THRESHOLD_C;
     currentConsecutiveDays = parseInt(localStorage.getItem('dev_consecutiveDays')) || DEFAULT_CONSECUTIVE_DAYS;
 
-    // Populate input fields with current values
-    windInput.value = currentWindThresholdMph.toFixed(2);
-    rainInput.value = currentRainThresholdMmHr.toFixed(1);
-    heatwaveInput.value = currentHeatwaveThresholdC;
-    consecutiveDaysInput.value = currentConsecutiveDays;
+    if (windInput) windInput.value = currentWindThresholdMph.toFixed(2);
+    if (rainInput) rainInput.value = currentRainThresholdMmHr.toFixed(1);
+    if (heatwaveInput) heatwaveInput.value = currentHeatwaveThresholdC;
+    if (consecutiveDaysInput) consecutiveDaysInput.value = currentConsecutiveDays;
 }
 
-// Function to save thresholds to localStorage and update active variables
 function saveThresholds() {
-    currentWindThresholdMph = parseFloat(windInput.value);
-    currentRainThresholdMmHr = parseFloat(rainInput.value);
-    currentHeatwaveThresholdC = parseFloat(heatwaveInput.value);
-    currentConsecutiveDays = parseInt(consecutiveDaysInput.value);
+    currentWindThresholdMph = windInput ? parseFloat(windInput.value) : DEFAULT_WIND_THRESHOLD_MPH;
+    currentRainThresholdMmHr = rainInput ? parseFloat(rainInput.value) : DEFAULT_RAIN_THRESHOLD_MM_HR;
+    currentHeatwaveThresholdC = heatwaveInput ? parseFloat(heatwaveInput.value) : DEFAULT_HEATWAVE_THRESHOLD_C;
+    currentConsecutiveDays = consecutiveDaysInput ? parseInt(consecutiveDaysInput.value) : DEFAULT_CONSECUTIVE_DAYS;
 
     localStorage.setItem('dev_windThreshold', currentWindThresholdMph);
     localStorage.setItem('dev_rainThreshold', currentRainThresholdMmHr);
@@ -532,36 +500,38 @@ function saveThresholds() {
     localStorage.setItem('dev_consecutiveDays', currentConsecutiveDays);
 }
 
-// Event listener for keyboard shortcut (Ctrl + Shift + F)
 document.addEventListener('keydown', (event) => {
     if (event.ctrlKey && event.shiftKey && event.key === 'F') {
-        event.preventDefault(); // Prevent default browser action for this key combo
-        if (devToolsPanel.style.display === 'none' || devToolsPanel.style.display === '') {
-            devToolsPanel.style.display = 'flex';
-            loadThresholds(); // Load current values when panel is shown
-        } else {
-            devToolsPanel.style.display = 'none';
+        event.preventDefault();
+        if (devToolsPanel) {
+            if (devToolsPanel.style.display === 'none' || devToolsPanel.style.display === '') {
+                devToolsPanel.style.display = 'flex';
+                loadThresholds();
+            } else {
+                devToolsPanel.style.display = 'none';
+            }
         }
     }
 });
 
-// Event listeners for developer panel buttons
-applyBtn.addEventListener('click', () => {
-    saveThresholds();
-    displayWeatherWarnings(); // Refresh weather data with new thresholds
-});
+if (applyBtn) {
+    applyBtn.addEventListener('click', () => {
+        saveThresholds();
+        displayWeatherWarnings();
+    });
+}
 
-resetBtn.addEventListener('click', () => {
-    windInput.value = DEFAULT_WIND_THRESHOLD_MPH.toFixed(2);
-    rainInput.value = DEFAULT_RAIN_THRESHOLD_MM_HR.toFixed(1);
-    heatwaveInput.value = DEFAULT_HEATWAVE_THRESHOLD_C;
-    consecutiveDaysInput.value = DEFAULT_CONSECUTIVE_DAYS;
-    saveThresholds(); // Save defaults
-    displayWeatherWarnings(); // Refresh weather data with default thresholds
-});
+if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+        if (windInput) windInput.value = DEFAULT_WIND_THRESHOLD_MPH.toFixed(2);
+        if (rainInput) rainInput.value = DEFAULT_RAIN_THRESHOLD_MM_HR.toFixed(1);
+        if (heatwaveInput) heatwaveInput.value = DEFAULT_HEATWAVE_THRESHOLD_C;
+        if (consecutiveDaysInput) consecutiveDaysInput.value = DEFAULT_CONSECUTIVE_DAYS;
+        saveThresholds();
+        displayWeatherWarnings();
+    });
+}
 
-// Initial load of thresholds when script runs (if dev panel is shown manually or later)
 loadThresholds();
 
-// Initial event listener for the main fetch button
 document.getElementById('fetchWeatherBtn').addEventListener('click', displayWeatherWarnings);
