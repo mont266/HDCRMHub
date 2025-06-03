@@ -22,30 +22,43 @@ function calculateThresholds() {
     const isGlobalControlTicked = globalControlCheckbox.checked;
     console.log('Global Control Ticked:', isGlobalControlTicked);
 
-    let lowerThreshold;
-    let upperThreshold;
+    let lowerThresholdPercentage; // These will store the percentage rates (e.g., 0.11, 0.01)
+    let upperThresholdPercentage;
 
-    // Apply the calculation logic based on the global control state
+    // Determine the percentage rates based on the global control state
     if (isGlobalControlTicked) {
         // If global control is ticked:
-        // Lower threshold = 11% of send volume
-        // Upper threshold = 1% of send volume
-        lowerThreshold = sendVolume * 0.11;
-        upperThreshold = sendVolume * 0.01;
+        // Lower threshold = 11%
+        // Upper threshold = 1%
+        lowerThresholdPercentage = 0.11;
+        upperThresholdPercentage = 0.01;
     } else {
         // If global control is not ticked:
-        // Lower threshold = 2% of send volume
-        // Upper threshold = 1% of send volume
-        lowerThreshold = sendVolume * 0.02;
-        upperThreshold = sendVolume * 0.01;
+        // Lower threshold = 2%
+        // Upper threshold = 1%
+        lowerThresholdPercentage = 0.02;
+        upperThresholdPercentage = 0.01;
     }
 
-    // Round down the results to the nearest whole number (no decimal points)
-    lowerThresholdDisplay.textContent = Math.floor(lowerThreshold);
-    upperThresholdDisplay.textContent = Math.floor(upperThreshold);
+    // Calculate the actual threshold amounts
+    const lowerThresholdAmount = sendVolume * lowerThresholdPercentage;
+    const upperThresholdAmount = sendVolume * upperThresholdPercentage;
 
-    console.log('Lower Threshold (rounded down):', Math.floor(lowerThreshold));
-    console.log('Upper Threshold (rounded down):', Math.floor(upperThreshold));
+    // Calculate the final displayed values: send volume + threshold amount
+    const displayedLowerThreshold = sendVolume + lowerThresholdAmount;
+    const displayedUpperThreshold = sendVolume + upperThresholdAmount;
+
+    // Round down the results to the nearest whole number (no decimal points)
+    // Then, format the numbers with comma separators for thousands
+    lowerThresholdDisplay.textContent = Math.floor(displayedLowerThreshold).toLocaleString();
+    upperThresholdDisplay.textContent = Math.floor(displayedUpperThreshold).toLocaleString();
+
+    console.log('Lower Threshold Percentage:', lowerThresholdPercentage * 100 + '%');
+    console.log('Upper Threshold Percentage:', upperThresholdPercentage * 100 + '%');
+    console.log('Lower Threshold Amount:', lowerThresholdAmount.toFixed(2));
+    console.log('Upper Threshold Amount:', upperThresholdAmount.toFixed(2));
+    console.log('Displayed Lower Threshold (rounded down and formatted):', Math.floor(displayedLowerThreshold).toLocaleString());
+    console.log('Displayed Upper Threshold (rounded down and formatted):', Math.floor(displayedUpperThreshold).toLocaleString());
 }
 
 // Attach an event listener to the "Calculate" button.
