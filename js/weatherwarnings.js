@@ -467,7 +467,7 @@ function applyAllFilters() {
 
 // --- Developer Tools Panel Logic ---
 
-// These elements are also assumed to be static in the HTML and always present
+// These elements are assumed to be static in the HTML and always present
 const devToolsPanel = document.getElementById('developerTools');
 const windInput = document.getElementById('windThreshold');
 const rainInput = document.getElementById('rainThreshold');
@@ -500,13 +500,14 @@ function saveThresholds() {
     localStorage.setItem('dev_consecutiveDays', currentConsecutiveDays);
 }
 
+// Event listener for keyboard shortcut (Ctrl + Shift + F) - RESTORED
 document.addEventListener('keydown', (event) => {
     if (event.ctrlKey && event.shiftKey && event.key === 'F') {
-        event.preventDefault();
+        event.preventDefault(); // Prevent default browser action for this key combo
         if (devToolsPanel) {
             if (devToolsPanel.style.display === 'none' || devToolsPanel.style.display === '') {
                 devToolsPanel.style.display = 'flex';
-                loadThresholds();
+                loadThresholds(); // Load current values when panel is shown
             } else {
                 devToolsPanel.style.display = 'none';
             }
@@ -514,6 +515,31 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
+// Event listener for right-click on the fetchWeatherBtn (remains)
+document.addEventListener('DOMContentLoaded', () => {
+    const fetchWeatherBtn = document.getElementById('fetchWeatherBtn');
+    if (fetchWeatherBtn) {
+        fetchWeatherBtn.addEventListener('contextmenu', (event) => {
+            event.preventDefault(); // Prevent the default browser context menu
+            if (devToolsPanel) { // Check if devToolsPanel exists
+                if (devToolsPanel.style.display === 'none' || devToolsPanel.style.display === '') {
+                    devToolsPanel.style.display = 'flex';
+                    loadThresholds(); // Load current values when panel is shown
+                } else {
+                    devToolsPanel.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    // ... (rest of your DOMContentLoaded logic for search/filter elements and their event listeners) ...
+
+    // Initial event listener for the main fetch button (left-click)
+    document.getElementById('fetchWeatherBtn').addEventListener('click', displayWeatherWarnings);
+});
+
+
+// Event listeners for developer panel buttons (remain unchanged)
 if (applyBtn) {
     applyBtn.addEventListener('click', () => {
         saveThresholds();
@@ -532,6 +558,7 @@ if (resetBtn) {
     });
 }
 
+// Initial load of thresholds when script runs (if dev panel is shown manually or later)
 loadThresholds();
 
 document.getElementById('fetchWeatherBtn').addEventListener('click', displayWeatherWarnings);
