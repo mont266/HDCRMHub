@@ -51,11 +51,25 @@ function calculateThresholds() {
 
     // Calculate the actual threshold amounts based on the determined baseVolume
     const lowerThresholdAmount = baseVolume * lowerThresholdPercentage;
-    const upperThresholdAmount = baseVolume * upperThresholdPercentage;
+    let upperThresholdAmount = baseVolume * upperThresholdPercentage; // Changed to 'let' as it might be modified
 
-    // Calculate the final displayed values: base volume + threshold amount
-    const displayedLowerThreshold = baseVolume + lowerThresholdAmount;
-    const displayedUpperThreshold = baseVolume + upperThresholdAmount;
+    // Calculate the final displayed values:
+    // Lower threshold: base volume MINUS threshold amount
+    const displayedLowerThreshold = baseVolume - lowerThresholdAmount;
+
+    // Calculate upper threshold: base volume PLUS threshold amount (pre-adjustment)
+    let displayedUpperThreshold = baseVolume + upperThresholdAmount;
+
+    // Apply the new rule for Upper Threshold:
+    // It should always be at least 1 more than the send volume,
+    // handling cases where 1% of send volume is less than 1 (e.g., 1% of 50 is 0.5).
+    // We check if the *floored* result is less than baseVolume + 1.
+    // If it is, we ensure the displayed value is exactly baseVolume + 1.
+    if (Math.floor(displayedUpperThreshold) < (baseVolume + 1)) {
+        displayedUpperThreshold = baseVolume + 1; // Ensure it's at least +1 from the base volume
+        console.log('Adjusted Upper Threshold to ensure it is at least +1 from base volume.');
+    }
+
 
     // Round down the results to the nearest whole number and format with commas
     lowerThresholdDisplay.textContent = Math.floor(displayedLowerThreshold).toLocaleString();
